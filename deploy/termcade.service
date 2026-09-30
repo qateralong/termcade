@@ -4,17 +4,21 @@ After=network-online.target
 Wants=network-online.target
 
 [Service]
-ExecStart=/usr/local/bin/termcade -addr :2222
+ExecStart=/usr/local/bin/termcade serve
 WorkingDirectory=/var/lib/termcade
 Environment=TERMCADE_HOST_KEY=/var/lib/termcade/host_ed25519
 Environment=TERMCADE_DB=/var/lib/termcade/termcade.db
+# Local settings such as TERMCADE_ADDR live here; values override the above.
+EnvironmentFile=-/etc/termcade/termcade.env
 Restart=on-failure
 RestartSec=2
+# Leaves time to tell connected players the arcade is restarting.
+TimeoutStopSec=20
 
 # Run as an unprivileged, throwaway user with its own state directory.
 DynamicUser=yes
 StateDirectory=termcade
-# Allows binding port 22 if you switch -addr to :22.
+# Allows binding port 22 if you set TERMCADE_ADDR=:22.
 AmbientCapabilities=CAP_NET_BIND_SERVICE
 CapabilityBoundingSet=CAP_NET_BIND_SERVICE
 

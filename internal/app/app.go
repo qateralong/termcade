@@ -81,6 +81,8 @@ type App struct {
 	toast      string
 	toastErr   bool
 	toastUntil time.Time
+
+	shutdown string // set when the server is going down
 }
 
 // New creates the app for one session. It looks up the player by key
@@ -142,6 +144,10 @@ func (m *App) Name() string { return m.name }
 // Color returns the player's color key.
 func (m *App) Color() string { return m.color }
 
+// ShuttingDown reports whether the session ended because the server is
+// going down.
+func (m *App) ShuttingDown() bool { return m.shutdown != "" }
+
 // Init implements tea.Model.
 func (m *App) Init() tea.Cmd {
 	return tea.Batch(tea.SetWindowTitle(theme.Name), m.intro.init())
@@ -187,6 +193,14 @@ func (m *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case games.ExitMsg:
 		return m, m.exitGame()
+
+	case hub.ShutdownMsg:
+		// Show the notice for a moment, then disconnect cleanly.
+		m.shutdown = msg.Reason
+		return m, tea.Tick(1500*time.Millisecond, func(time.Time) tea.Msg { return tea.Quit() })
+	}
+	if m.shutdown != "" {
+		return m, nil // ignore input while the notice is up
 	}
 
 	switch m.screen {
@@ -204,6 +218,9 @@ func (m *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // View implements tea.Model.
 func (m *App) View() string {
+	if m.shutdown != "" {
+		return m.viewShutdown()
+	}
 	if m.screen == screenGame && m.game != nil {
 		return m.game.View()
 	}
@@ -312,6 +329,17 @@ func (m *App) gameName(location string) string {
 		return strings.ToLower(g.Info().Name)
 	}
 	return location
+}
+
+func (m *App) viewShutdown() string {
+	t := m.th
+	body := lipgloss.JoinVertical(lipgloss.Center,
+		t.Gradient(theme.SmallLogo(), theme.LogoGradient, 12, 0, true),
+		"",
+		t.Fg(theme.Amber).Bold(true).Render(m.shutdown),
+		t.Dim.Render("reconnect in a few seconds"),
+	)
+	return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, t.Modal.Render(body))
 }
 
 func (m *App) viewTooSmall() string {

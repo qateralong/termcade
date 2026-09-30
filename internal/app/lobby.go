@@ -11,6 +11,7 @@ import (
 
 	"termcade/internal/hub"
 	"termcade/internal/ui/theme"
+	"termcade/internal/version"
 )
 
 var itoa = strconv.Itoa
@@ -495,7 +496,8 @@ func (m *App) viewHelp() string {
 		return t.Key.Render(padRight(k, 12)) + t.Base.Render(desc)
 	}
 	body := lipgloss.JoinVertical(lipgloss.Left,
-		t.Gradient(theme.SmallLogo(), theme.LogoGradient, 12, float64(m.frame)*0.015, true),
+		t.Gradient(theme.SmallLogo(), theme.LogoGradient, 12, float64(m.frame)*0.015, true)+
+			t.Faded.Render("  "+version.String()),
 		"",
 		t.Title.Render("KEYS"),
 		row("↑ ↓  j k", "choose a game"),

@@ -1,0 +1,42 @@
+name: Release
+
+# Pushing a tag like v0.0.2 builds the Linux binaries and publishes them as a
+# GitHub release, which "termcade update" then installs on the server.
+on:
+  push:
+    tags: ["v[0-9]+.[0-9]+.[0-9]+"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Test
+        run: go test -count=1 ./...
+
+      - name: Build
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          mkdir dist
+          for arch in amd64 arm64; do
+            CGO_ENABLED=0 GOOS=linux GOARCH="$arch" go build -trimpath \
+              -ldflags="-s -w -X termcade/internal/version.Version=$VERSION" \
+              -o "dist/termcade-linux-$arch" ./cmd/termcade
+          done
+          ./dist/termcade-linux-amd64 version
+          cp deploy/install.sh dist/install.sh
+          cd dist && sha256sum termcade-* install.sh > checksums.txt
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/* \
+            --title "$GITHUB_REF_NAME" --generate-notes --verify-tag

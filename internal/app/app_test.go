@@ -172,3 +172,23 @@ func TestGameLifecycle(t *testing.T) {
 		t.Fatalf("left = %d after disconnect", left)
 	}
 }
+
+func TestShutdownNotice(t *testing.T) {
+	m := newTestApp(t, Identity{SessionID: "s1"})
+	m.name = "player"
+	m.enterLobby()
+	m.Update(tea.WindowSizeMsg{Width: 100, Height: 30})
+
+	_, cmd := m.Update(hub.ShutdownMsg{Reason: "The arcade is restarting"})
+	if !m.ShuttingDown() || !strings.Contains(m.View(), "The arcade is restarting") {
+		t.Fatal("shutdown notice not shown")
+	}
+	if cmd == nil {
+		t.Fatal("expected a delayed quit command")
+	}
+	// Input is ignored while the notice is up.
+	m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("p")})
+	if m.screen != screenLobby {
+		t.Fatalf("screen changed to %v during shutdown", m.screen)
+	}
+}

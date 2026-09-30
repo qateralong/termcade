@@ -5,7 +5,10 @@ WORKDIR /src
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/termcade ./cmd/termcade \
+ARG VERSION=dev
+RUN CGO_ENABLED=0 go build -trimpath \
+      -ldflags="-s -w -X termcade/internal/version.Version=${VERSION}" \
+      -o /out/termcade ./cmd/termcade \
  && mkdir -p /out/data
 
 FROM gcr.io/distroless/static-debian12:nonroot
@@ -16,4 +19,4 @@ ENV TERMCADE_ADDR=:2222 \
     TERMCADE_DB=/data/termcade.db
 VOLUME /data
 EXPOSE 2222
-ENTRYPOINT ["/termcade"]
+ENTRYPOINT ["/termcade", "serve"]

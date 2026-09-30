@@ -58,6 +58,9 @@ type PresenceMsg struct{ Members []Member }
 // ChatMsg carries a single new chat message.
 type ChatMsg struct{ Message ChatMessage }
 
+// ShutdownMsg tells sessions the server is about to go down.
+type ShutdownMsg struct{ Reason string }
+
 type client struct {
 	member  Member
 	outbox  chan any
@@ -184,6 +187,20 @@ func (h *Hub) NameOnline(name, exceptSession string) bool {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	return h.nameOnlineLocked(name, exceptSession)
+}
+
+// Shutdown warns every session that the server is going down.
+func (h *Hub) Shutdown(reason string) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	h.sendAllLocked(ShutdownMsg{Reason: reason})
+}
+
+// Count returns the number of connected sessions.
+func (h *Hub) Count() int {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	return len(h.clients)
 }
 
 // Members returns a snapshot of everyone online, sorted by name.

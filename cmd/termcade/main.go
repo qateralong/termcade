@@ -1,102 +1,49 @@
-// Command termcade runs the arcade SSH server.
+// Command termcade runs the arcade SSH server and manages its installation.
 package main
 
 import (
-	"context"
-	"errors"
-	"flag"
+	"fmt"
 	"os"
-	"os/signal"
-	"syscall"
-	"time"
+	"strings"
 
-	"github.com/charmbracelet/log"
-	"github.com/charmbracelet/ssh"
-
-	"termcade/internal/app"
-	"termcade/internal/games"
-	"termcade/internal/hub"
-	"termcade/internal/server"
-	"termcade/internal/store"
+	"termcade/internal/version"
 )
 
-func env(key, fallback string) string {
-	if v, ok := os.LookupEnv(key); ok && v != "" {
-		return v
-	}
-	return fallback
-}
+const usage = `termcade: a tiny multiplayer arcade you play over SSH
+
+Usage:
+  termcade [serve] [flags]   run the arcade server (the default)
+  termcade update [flags]    install the newest release and restart the service
+  termcade install [flags]   set up termcade as a systemd service (Linux, root)
+  termcade version           print the version
+
+Run "termcade <command> -h" for the flags of a command.
+`
 
 func main() {
-	var (
-		addr    = flag.String("addr", env("TERMCADE_ADDR", ":2222"), "SSH listen address (env TERMCADE_ADDR)")
-		hostKey = flag.String("host-key", env("TERMCADE_HOST_KEY", "data/host_ed25519"), "host key path, created if missing (env TERMCADE_HOST_KEY)")
-		dbPath  = flag.String("db", env("TERMCADE_DB", "data/termcade.db"), "SQLite database path (env TERMCADE_DB)")
-		debug   = flag.Bool("debug", os.Getenv("TERMCADE_DEBUG") != "", "verbose logging (env TERMCADE_DEBUG)")
-	)
-	flag.Parse()
-
-	logger := log.NewWithOptions(os.Stderr, log.Options{
-		ReportTimestamp: true,
-		TimeFormat:      time.DateTime,
-		Prefix:          "termcade",
-	})
-	if *debug {
-		logger.SetLevel(log.DebugLevel)
+	args := os.Args[1:]
+	cmd := "serve"
+	if len(args) > 0 && !strings.HasPrefix(args[0], "-") {
+		cmd, args = args[0], args[1:]
 	}
 
-	if err := run(logger, *addr, *hostKey, *dbPath); err != nil {
-		logger.Fatal("server stopped", "err", err)
+	var err error
+	switch cmd {
+	case "serve":
+		err = serveCmd(args)
+	case "update":
+		err = updateCmd(args)
+	case "install":
+		err = installCmd(args)
+	case "version":
+		fmt.Println("termcade", version.String())
+	case "help":
+		fmt.Print(usage)
+	default:
+		fmt.Fprintf(os.Stderr, "unknown command %q\n\n%s", cmd, usage)
+		os.Exit(2)
 	}
-}
-
-func run(logger *log.Logger, addr, hostKey, dbPath string) error {
-	st, err := store.Open(dbPath)
 	if err != nil {
-		return err
+		fail(err)
 	}
-	defer st.Close()
-
-	deps := app.Deps{
-		Store: st,
-		Hub:   hub.New(),
-		Games: games.NewRegistry(games.Catalog()...),
-		Log:   logger,
-	}
-
-	srv, err := server.New(server.Config{
-		Addr:        addr,
-		HostKeyPath: hostKey,
-		IdleTimeout: time.Hour,
-	}, deps)
-	if err != nil {
-		return err
-	}
-
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
-
-	errc := make(chan error, 1)
-	go func() {
-		players, _ := st.CountPlayers(context.Background())
-		logger.Info("arcade is open", "addr", addr, "players", players, "games", len(deps.Games.All()))
-		errc <- srv.ListenAndServe()
-	}()
-
-	select {
-	case err := <-errc:
-		if !errors.Is(err, ssh.ErrServerClosed) {
-			return err
-		}
-		return nil
-	case <-ctx.Done():
-	}
-
-	logger.Info("shutting down")
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	if err := srv.Shutdown(shutdownCtx); err != nil && !errors.Is(err, ssh.ErrServerClosed) {
-		return err
-	}
-	return nil
 }

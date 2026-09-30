@@ -99,10 +99,14 @@ func farewell(logger *log.Logger) wish.Middleware {
 		return func(sess ssh.Session) {
 			if a, ok := sess.Context().Value(appKey).(*app.App); ok {
 				a.Close()
-				if name := a.Name(); name != "" {
-					th := theme.New(bm.MakeRenderer(sess))
-					wish.Println(sess, "\n  "+
-						th.Gradient("◆ "+theme.Name, theme.LogoGradient, 12, 0, true)+
+				th := theme.New(bm.MakeRenderer(sess))
+				logo := th.Gradient("◆ "+theme.Name, theme.LogoGradient, 12, 0, true)
+				switch name := a.Name(); {
+				case a.ShuttingDown():
+					wish.Println(sess, "\n  "+logo+
+						th.Dim.Render("  the arcade is restarting, reconnect in a few seconds.")+"\n")
+				case name != "":
+					wish.Println(sess, "\n  "+logo+
 						th.Dim.Render("  thanks for playing, ")+th.PlayerName(name, a.Color())+
 						th.Dim.Render("! see you soon.")+"\n")
 				}

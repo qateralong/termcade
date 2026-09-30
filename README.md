@@ -82,30 +82,81 @@ Every flag can also be set with an environment variable.
 
 ## Deploying
 
-### Docker
+Termcade updates itself from GitHub releases. Getting the newest version onto
+the server is a single command.
+
+### 1. Install once
+
+On a Linux server with systemd (x86_64 or arm64), run the following. The token
+is a GitHub [fine-grained token](https://github.com/settings/personal-access-tokens/new)
+limited to this repository with read-only **Contents** access. It is only
+needed because the repository is private.
 
 ```bash
-docker build -t termcade .
-docker run -d --name termcade --restart unless-stopped \
-  -p 2222:2222 -v termcade-data:/data termcade
+read -rsp "GitHub token: " GITHUB_TOKEN && export GITHUB_TOKEN && echo
+curl -fsSL -H "Authorization: Bearer $GITHUB_TOKEN" \
+     -H "Accept: application/vnd.github.raw" \
+     https://api.github.com/repos/qateralong/termcade/contents/deploy/install.sh \
+  | sudo -E bash
 ```
 
-### systemd
+The script downloads the newest release, verifies its checksum and runs
+`termcade install`, which:
+
+- puts the binary in `/usr/local/bin/termcade`,
+- writes the settings to `/etc/termcade/termcade.env` and the token to
+  `/etc/termcade/github-token` (readable by root only),
+- installs and starts a hardened systemd service that runs as an unprivileged
+  user and keeps its data in `/var/lib/termcade`.
+
+### 2. Update with one command
 
 ```bash
-CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o termcade ./cmd/termcade
-scp termcade you@your-vps:/usr/local/bin/termcade
-scp deploy/termcade.service you@your-vps:/etc/systemd/system/
-ssh you@your-vps 'systemctl daemon-reload && systemctl enable --now termcade'
+sudo termcade update
 ```
+
+It checks for a newer release, downloads it, verifies the SHA-256 checksum,
+swaps the binary, updates the service definition and restarts the service.
+Players who are online see a short "the arcade is restarting" notice rather than
+a dropped connection. If the new version doesn't come up healthy, the previous
+one is restored and restarted automatically.
+
+| Command | What it does |
+| --- | --- |
+| `termcade update --check` | Only report whether an update exists |
+| `sudo termcade update --to 0.0.2` | Install a specific version, including downgrades |
+| `sudo termcade update --force` | Reinstall the current version |
+| `termcade version` | Print the installed version |
+| `journalctl -u termcade -f` | Follow the server logs |
+
+### Publishing a release
+
+From your machine, on `main`:
+
+```bash
+scripts/release.sh 0.0.3
+```
+
+This runs gofmt, vet and the tests, commits everything with the version as the
+message, tags `v0.0.3` and pushes. GitHub Actions then builds the Linux
+binaries and publishes the release, which `termcade update` picks up.
 
 ### Serving on port 22
 
-To let players connect with a plain `ssh arcade.example.com`, move your
-server's own OpenSSH daemon to another port (for example `Port 2200` in
-`/etc/ssh/sshd_config`), make sure you can log in on the new port, and then run
-Termcade with `-addr :22`. The bundled systemd unit already grants the
-capability needed to bind low ports.
+To let players connect with a plain `ssh arcade.example.com`, move the server's
+own OpenSSH daemon to another port (for example `Port 2200` in
+`/etc/ssh/sshd_config`) and make sure you can still log in on the new port.
+Then set `TERMCADE_ADDR=:22` in `/etc/termcade/termcade.env` and run
+`sudo systemctl restart termcade`. The service is already allowed to bind low
+ports.
+
+### Docker
+
+```bash
+docker build --build-arg VERSION=0.0.2 -t termcade .
+docker run -d --name termcade --restart unless-stopped \
+  -p 2222:2222 -v termcade-data:/data termcade
+```
 
 ## How it works
 
@@ -131,7 +182,10 @@ capability needed to bind low ports.
   overrides are stripped.
 
 ```
-cmd/termcade        entry point, flags, graceful shutdown
+cmd/termcade        entry point: serve, update, install, version
+deploy              systemd unit, server layout, install script
+internal/update     GitHub release lookup, checksum check, binary swap
+internal/version    build version and semver comparison
 internal/server     SSH server, middleware, session wiring
 internal/app        per-session UI: intro, setup, lobby, game host
 internal/hub        presence and lobby chat
