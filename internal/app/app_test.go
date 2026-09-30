@@ -11,6 +11,7 @@ import (
 	"github.com/muesli/termenv"
 
 	"termcade/internal/games"
+	"termcade/internal/games/lineup"
 	"termcade/internal/hub"
 	"termcade/internal/store"
 	"termcade/internal/ui/theme"
@@ -28,7 +29,7 @@ func newTestApp(t *testing.T, id Identity) *App {
 	deps := Deps{
 		Store: st,
 		Hub:   hub.New(),
-		Games: games.NewRegistry(games.Catalog()...),
+		Games: games.NewRegistry(lineup.All()...),
 		Log:   log.New(io.Discard),
 	}
 	m := New(deps, theme.New(r), id, func(tea.Msg) {})
@@ -110,6 +111,7 @@ func TestSetupFlowCreatesPlayer(t *testing.T) {
 
 func TestComingSoonGameDoesNotLaunch(t *testing.T) {
 	m := newTestApp(t, Identity{SessionID: "s1"})
+	m.deps.Games = games.NewRegistry(games.Upcoming()...)
 	m.name = "guesty"
 	m.enterLobby()
 	m.Update(tea.KeyMsg{Type: tea.KeyEnter})

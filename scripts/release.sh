@@ -25,7 +25,8 @@ echo
 say "Checking formatting, vet and tests"
 [ -z "$(gofmt -l .)" ] || die "Unformatted files:$(printf ' %s' $(gofmt -l .))"
 go vet ./...
-go test -count=1 ./... >/dev/null || die "Tests failed; run go test ./..."
+# Limit parallel builds; linking many test binaries at once can exhaust RAM.
+go test -p 2 -count=1 ./... >/dev/null || die "Tests failed; run go test ./..."
 
 if [ -n "$(git status --porcelain)" ]; then
   say "Committing changes as $VERSION"

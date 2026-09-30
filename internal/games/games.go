@@ -15,6 +15,14 @@ import (
 	"termcade/internal/ui/theme"
 )
 
+// Mode says whether a game is played alone or with others.
+type Mode string
+
+const (
+	Solo        Mode = "Solo"
+	Multiplayer Mode = "Multiplayer"
+)
+
 // Kind is the broad style of play.
 type Kind string
 
@@ -28,6 +36,7 @@ const (
 type Info struct {
 	ID          string   // stable identifier, e.g. "tron"
 	Name        string   // display name
+	Mode        Mode     // solo or multiplayer
 	Icon        string   // a single-cell glyph shown in the game list
 	Tagline     string   // one short line
 	Description string   // a few sentences
@@ -47,6 +56,27 @@ type Player struct {
 	Guest     bool
 }
 
+// ScoreEntry is one line of a leaderboard.
+type ScoreEntry struct {
+	Name  string
+	Color string
+	Score int
+}
+
+// ScoreBook records results and reads leaderboards. A board is a
+// leaderboard name such as "tetris" or "minesweeper:hard"; lowerIsBetter
+// selects whether it ranks times or points. Guests' results only live for
+// their session.
+type ScoreBook interface {
+	// Submit records a finished game and returns the player's best on the
+	// board and whether this score set a new personal record.
+	Submit(board string, lowerIsBetter bool, score int) (best int, record bool)
+	// Best returns the player's best score, if any.
+	Best(board string, lowerIsBetter bool) (int, bool)
+	// Top returns the leaders of a board.
+	Top(board string, lowerIsBetter bool, n int) []ScoreEntry
+}
+
 // Session is everything a game needs to build a player's model.
 type Session struct {
 	Player Player
@@ -59,6 +89,8 @@ type Session struct {
 	// per-player queue (see internal/hub) rather than calling it while
 	// holding a lock.
 	Send func(tea.Msg)
+	// Scores is the player's view of the leaderboards.
+	Scores ScoreBook
 }
 
 // Leaver is implemented by game models that need to clean up when the player

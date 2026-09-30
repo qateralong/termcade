@@ -40,14 +40,28 @@ already have.
 
 ## Games
 
-| Game | Style | Players | Status |
-| --- | --- | --- | --- |
-| Tron | Realtime | 2–8 | 🛠 in the workshop |
-| Snake Arena | Realtime | 1–30 | 🛠 in the workshop |
-| Type Race | Realtime | 2–10 | 🛠 in the workshop |
-| Bomberman | Realtime | 2–4 | 🛠 in the workshop |
-| Battleship | Turn-based | 2 | 🛠 in the workshop |
-| Durak | Turn-based | 2–6 | 🛠 in the workshop |
+**Solo**, with personal bests and a leaderboard for each game:
+
+| Game | What it is |
+| --- | --- |
+| Pac-Man | The maze chase, with four ghosts that each hunt differently, power pellets, tunnels, fruit and levels |
+| Tetris | Modern rules: SRS rotation with wall kicks, 7-bag, hold, ghost piece, next queue, lock delay |
+| Snake | One snake, one apple, a walled arena, and it gets faster as you grow |
+| Minesweeper | Easy, medium and hard boards, a safe first click, chording, and mouse support |
+
+**Multiplayer** (coming soon). A room starts as soon as it's full, or after
+20 seconds with bots in the empty seats.
+
+| Game | Players |
+| --- | --- |
+| Snake Arena | 2–8 |
+| Tanks | 2–4 |
+| Chicken Run | 4 |
+| Racing | 4 |
+| Alien | 2–6 |
+| Battleship | 2 |
+| Durak | 2 |
+| Poker | 4 |
 
 ## Running it locally
 
@@ -189,7 +203,9 @@ internal/version    build version and semver comparison
 internal/server     SSH server, middleware, session wiring
 internal/app        per-session UI: intro, setup, lobby, game host
 internal/hub        presence and lobby chat
-internal/games      the Game interface and the game catalog
+internal/games      the Game interface and upcoming games
+internal/games/solo shared frame for single-player games: title, pause, scores
+internal/games/*    one package per game; lineup/ sets the lobby order
 internal/store      SQLite persistence
 internal/textutil   name validation and text sanitizing
 internal/ui/theme   palette, gradients, logo

@@ -18,82 +18,104 @@ func (Placeholder) Available() bool { return false }
 // Join implements Game. It is never called for unavailable games.
 func (Placeholder) Join(Session) tea.Model { return nil }
 
-// Catalog returns the default set of games shown in the lobby.
-func Catalog() []Game {
+// lobbyNote explains the shared matchmaking rules on every multiplayer game.
+const lobbyNote = " Rooms start when full, or after 20 seconds with bots in the empty seats."
+
+// Upcoming returns the multiplayer games that are announced but not built
+// yet.
+func Upcoming() []Game {
+	mp := func(i Info) Game {
+		i.Mode = Multiplayer
+		i.Description += lobbyNote
+		return Placeholder{i}
+	}
 	return []Game{
-		Placeholder{Info{
-			ID:          "tron",
-			Name:        "Tron",
-			Icon:        "▶",
-			Tagline:     "Light cycles. Walls everywhere. Last one riding wins.",
-			Description: "Every rider leaves a solid wall of light behind them. Cut others off, squeeze through gaps and outlast everyone in fast 30-second rounds.",
-			Kind:        Realtime,
-			Players:     "2–8",
-			Controls:    []string{"←↑→↓", "steer", "space", "boost"},
-			Accent:      []string{theme.Cyan, theme.Sky, theme.Violet},
-			Art: []string{
-				"━━━━━━━━━━━━━━━━━━┓",
-				"                  ┃    ┏━━━━━━━━━━▶",
-				"   ◀━━━━━━━━━━━┓  ┗━━━━┛",
-				"               ┃",
-				"   ━━━━━━━━━━━━┻━━━━━━━━━━━━━━━━╳",
-			},
-		}},
-		Placeholder{Info{
-			ID:          "snake",
+		mp(Info{
+			ID:          "snake-arena",
 			Name:        "Snake Arena",
 			Icon:        "●",
-			Tagline:     "One huge arena. Eat, grow, don't hit anyone.",
-			Description: "A shared world full of snakes. Grow by eating, make others crash into you, and turn their remains into your next meal. Climb the live leaderboard.",
+			Tagline:     "Classic snake, but everyone's in the same pit.",
+			Description: "Collect dots to score and grow while dodging the other snakes.",
 			Kind:        Realtime,
-			Players:     "1–30",
-			Controls:    []string{"←↑→↓", "turn", "space", "dash"},
+			Players:     "2–8",
+			Controls:    []string{"←↑→↓", "turn"},
 			Accent:      []string{theme.Lime, theme.Mint, theme.Cyan},
 			Art: []string{
 				"    ·          ◆             ·",
 				"  ●━━━━━━━━┓          ┏━━━━━━━●",
 				"     ·     ┗━━━━━┓    ┃    ·",
 				"   ◆             ┗━━━━┛        ◆",
-				"         ·              ·",
 			},
-		}},
-		Placeholder{Info{
-			ID:          "typerace",
-			Name:        "Type Race",
-			Icon:        "▮",
-			Tagline:     "Same text for everyone. Fastest fingers win.",
-			Description: "Everyone gets the same passage. Type it as fast and as cleanly as you can while watching the others' progress bars creep forward.",
-			Kind:        Realtime,
-			Players:     "2–10",
-			Controls:    []string{"type", "race", "esc", "leave"},
-			Accent:      []string{theme.Amber, theme.Coral, theme.Pink},
-			Art: []string{
-				" alice  ██████████████░░░░  94 wpm",
-				" you    ███████████░░░░░░░  82 wpm",
-				" bob    ████████░░░░░░░░░░  61 wpm",
-				"",
-				" the quick brown fox jumps▏",
-			},
-		}},
-		Placeholder{Info{
-			ID:          "bomber",
-			Name:        "Bomberman",
-			Icon:        "◆",
-			Tagline:     "Drop bombs, blast walls, trap your friends.",
-			Description: "A classic maze brawl. Blow up crates to find power-ups, chain explosions together and corner your opponents until only one is left standing.",
+		}),
+		mp(Info{
+			ID:          "tanks",
+			Name:        "Tanks",
+			Icon:        "▣",
+			Tagline:     "Brick walls, steel walls and a lot of shells.",
+			Description: "Top-down tank battles in the style of the NES classic. Blast through bricks, hide behind steel, and be the last tank rolling.",
 			Kind:        Realtime,
 			Players:     "2–4",
-			Controls:    []string{"←↑→↓", "move", "space", "bomb"},
-			Accent:      []string{theme.Coral, theme.Amber, theme.Pink},
+			Controls:    []string{"←↑→↓", "drive", "space", "fire"},
+			Accent:      []string{theme.Amber, theme.Coral, theme.Lime},
 			Art: []string{
-				" ███████████████████████████",
-				" █ ◉    ▒▒   ▒▒         ◉  █",
-				" █ █ █ █ █ █▒█ █ █ █ █ █ █ █",
-				" █   ▒▒    ━━━╋━━━   ▒▒    █",
-				" ███████████████████████████",
+				" ▓▓▓▓  ░░░░      ▓▓▓▓",
+				" ▓▓▓▓  ░░░░  ▲   ▓▓▓▓",
+				"       ░░░░  █",
+				"   ▀█▀     ·  ·  ·  ▄█▄",
 			},
-		}},
-		Placeholder{Info{
+		}),
+		mp(Info{
+			ID:          "chicken-run",
+			Name:        "Chicken Run",
+			Icon:        "▲",
+			Tagline:     "One button flips gravity. Don't fall off the world.",
+			Description: "Four chickens race through a random level. Tap to flip your gravity between floor and ceiling, dodge the obstacles, and don't get left behind the edge of the screen.",
+			Kind:        Realtime,
+			Players:     "4",
+			Controls:    []string{"space", "flip gravity"},
+			Accent:      []string{theme.Amber, "#FF9F43", theme.Pink},
+			Art: []string{
+				"▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀",
+				"      ▼        █        ▼",
+				"  ▲       ▲    █   ▲",
+				"▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄",
+			},
+		}),
+		mp(Info{
+			ID:          "racing",
+			Name:        "Racing",
+			Icon:        "▶",
+			Tagline:     "Three laps. Several tracks. First across the line.",
+			Description: "Top-down car racing on arrow keys. Take the racing line, don't clip the walls, and be first after three laps.",
+			Kind:        Realtime,
+			Players:     "4",
+			Controls:    []string{"↑", "gas", "↓", "brake", "←→", "steer"},
+			Accent:      []string{theme.Coral, theme.Amber, theme.Sky},
+			Art: []string{
+				"╭────────────────────────╮",
+				"│  ▶ ▶      ╭──────╮  ▼  │",
+				"│      ▶    ╰──────╯     │",
+				"╰────────────────────────╯",
+			},
+		}),
+		mp(Info{
+			ID:          "alien",
+			Name:        "Alien",
+			Icon:        "◉",
+			Tagline:     "Orbit the alien. Dodge its attacks. Outlast everyone.",
+			Description: "Every player is a flying saucer circling the alien non-stop. Press space to reverse your orbit and dodge its attacks. Last saucer flying wins.",
+			Kind:        Realtime,
+			Players:     "2–6",
+			Controls:    []string{"space", "reverse orbit"},
+			Accent:      []string{theme.Mint, theme.Lime, theme.Violet},
+			Art: []string{
+				"        ◇         ◇",
+				"   ◇       ╭───╮      ◇",
+				"      ⋯⋯⋯⋯ │◉ ◉│ ⋯⋯⋯",
+				"   ◇       ╰─▽─╯      ◇",
+			},
+		}),
+		mp(Info{
 			ID:          "battleship",
 			Name:        "Battleship",
 			Icon:        "■",
@@ -108,26 +130,40 @@ func Catalog() []Game {
 				"  1 · · ■ ■ ■ · · ·",
 				"  2 · ╳ · · · · ○ ·",
 				"  3 · · · ○ · · · ·",
-				"  4 ■ · · · · ╳ ╳ ·",
 			},
-		}},
-		Placeholder{Info{
+		}),
+		mp(Info{
 			ID:          "durak",
 			Name:        "Durak",
 			Icon:        "♠",
 			Tagline:     "The card game where nobody wants to be the fool.",
-			Description: "Attack, defend and pile on. Get rid of all your cards before everyone else, or be crowned the durak. Bots fill empty seats.",
+			Description: "Attack, defend and pile on. Get rid of all your cards first, or be crowned the durak.",
 			Kind:        TurnBased,
-			Players:     "2–6",
+			Players:     "2",
 			Controls:    []string{"←→", "pick card", "enter", "play", "t", "take"},
 			Accent:      []string{theme.Pink, theme.Coral, theme.Violet},
 			Art: []string{
 				" ╭─────╮╭─────╮╭─────╮",
 				" │ 7   ││ K   ││ A   │",
 				" │  ♠  ││  ♥  ││  ♦  │",
-				" │   7 ││   K ││   A │",
 				" ╰─────╯╰─────╯╰─────╯",
 			},
-		}},
+		}),
+		mp(Info{
+			ID:          "poker",
+			Name:        "Poker",
+			Icon:        "♦",
+			Tagline:     "Texas hold'em for four. Chips, bluffs, showdowns.",
+			Description: "No-limit Texas hold'em at a four-seat table. Read the others, pick your moment, and take the pot.",
+			Kind:        TurnBased,
+			Players:     "4",
+			Controls:    []string{"c", "check/call", "r", "raise", "f", "fold"},
+			Accent:      []string{theme.Lime, theme.Amber, theme.Coral},
+			Art: []string{
+				" ╭────╮╭────╮  ◎◎◎  ╭────╮",
+				" │ A♠ ││ A♥ │  ◎◎   │ ?? │",
+				" ╰────╯╰────╯       ╰────╯",
+			},
+		}),
 	}
 }

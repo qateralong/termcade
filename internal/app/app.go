@@ -83,6 +83,8 @@ type App struct {
 	toastUntil time.Time
 
 	shutdown string // set when the server is going down
+
+	scores *scoreBook
 }
 
 // New creates the app for one session. It looks up the player by key
@@ -119,6 +121,7 @@ func New(deps Deps, th *theme.Theme, id Identity, send func(tea.Msg)) *App {
 		}
 	}
 	m.lobby = newLobby()
+	m.scores = &scoreBook{m: m}
 	return m
 }
 
@@ -284,6 +287,7 @@ func (m *App) launch(g games.Game) tea.Cmd {
 		Width:  m.width,
 		Height: m.height,
 		Send:   m.send,
+		Scores: m.scores,
 	})
 	if model == nil {
 		return m.notify("Couldn't start "+info.Name+", sorry.", true)

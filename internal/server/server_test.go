@@ -16,6 +16,7 @@ import (
 
 	"termcade/internal/app"
 	"termcade/internal/games"
+	"termcade/internal/games/lineup"
 	"termcade/internal/hub"
 	"termcade/internal/store"
 )
@@ -62,7 +63,7 @@ func TestEndToEnd(t *testing.T) {
 	deps := app.Deps{
 		Store: st,
 		Hub:   hub.New(),
-		Games: games.NewRegistry(games.Catalog()...),
+		Games: games.NewRegistry(lineup.All()...),
 		Log:   log.New(io.Discard),
 	}
 	srv, err := New(Config{Addr: "127.0.0.1:0", HostKeyPath: t.TempDir() + "/host_ed25519", IdleTimeout: time.Minute}, deps)

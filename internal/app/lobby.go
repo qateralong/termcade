@@ -9,6 +9,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
+	"termcade/internal/games"
 	"termcade/internal/hub"
 	"termcade/internal/ui/theme"
 	"termcade/internal/version"
@@ -256,28 +257,72 @@ func (m *App) viewFooter(w int) string {
 	return " " + fit(h, w-1)
 }
 
+// listRow is a line in the game list: a section heading or a game.
+type listRow struct {
+	heading string
+	game    int // index into Games.All(), or -1 for headings
+}
+
+// listRows groups the games under a heading per mode (solo, multiplayer).
+func (m *App) listRows() []listRow {
+	var rows []listRow
+	var mode games.Mode
+	for i, g := range m.deps.Games.All() {
+		if gm := g.Info().Mode; gm != mode || i == 0 {
+			mode = gm
+			heading := strings.ToUpper(string(gm))
+			if heading == "" {
+				heading = "GAMES"
+			}
+			rows = append(rows, listRow{heading: heading, game: -1})
+		}
+		rows = append(rows, listRow{game: i})
+	}
+	return rows
+}
+
 func (m *App) viewGameList(w, h int) string {
 	t := m.th
 	l := &m.lobby
 	all := m.deps.Games.All()
 	innerW := w - 4
-	rows := h - 2
+	visible := h - 2
 
 	if l.selected >= len(all) {
 		l.selected = len(all) - 1
 	}
-	if l.selected < l.offset {
-		l.offset = l.selected
+	rows := m.listRows()
+	selRow := 0
+	for i, r := range rows {
+		if r.game == l.selected {
+			selRow = i
+		}
 	}
-	if l.selected >= l.offset+rows {
-		l.offset = l.selected - rows + 1
+	// Keep the selection in view, along with its section heading when the
+	// selection is the first game of a section.
+	top := selRow
+	if top > 0 && rows[top-1].game < 0 {
+		top--
+	}
+	if top < l.offset {
+		l.offset = top
+	}
+	if selRow >= l.offset+visible {
+		l.offset = selRow - visible + 1
 	}
 
-	lines := make([]string, 0, rows)
-	for i := l.offset; i < len(all) && len(lines) < rows; i++ {
-		g := all[i]
+	lines := make([]string, 0, visible)
+	for ri := l.offset; ri < len(rows) && len(lines) < visible; ri++ {
+		r := rows[ri]
+		if r.game < 0 {
+			label := t.Faded.Bold(true).Render(r.heading) + " "
+			rule := t.R.NewStyle().Foreground(t.Border).Render(strings.Repeat("─", max(0, innerW-lipgloss.Width(label))))
+			lines = append(lines, label+rule)
+			continue
+		}
+		g := all[r.game]
 		info := g.Info()
-		sel := i == l.selected
+		sel := r.game == l.selected
 		bg := func(s lipgloss.Style) lipgloss.Style {
 			if sel {
 				return s.Background(t.Highlight)
@@ -289,7 +334,11 @@ func (m *App) viewGameList(w, h int) string {
 		if sel {
 			marker = bg(t.Fg(theme.Pink).Bold(true)).Render("▌ ")
 		}
-		icon := bg(t.Fg(info.Accent[0])).Render(info.Icon + " ")
+		accent := theme.Pink
+		if len(info.Accent) > 0 {
+			accent = info.Accent[0]
+		}
+		icon := bg(t.Fg(accent)).Render(info.Icon + " ")
 		name := bg(t.Base).Render(info.Name)
 		if sel {
 			name = bg(t.Bold).Render(info.Name)
@@ -314,7 +363,7 @@ func (m *App) viewGameList(w, h int) string {
 	}
 
 	title := "GAMES"
-	if len(all) > rows {
+	if len(rows) > visible {
 		title += " " + itoa(l.selected+1) + "/" + itoa(len(all))
 	}
 	return m.panel(title, strings.Join(lines, "\n"), w, h, l.focus == focusGames)
@@ -337,8 +386,12 @@ func (m *App) viewGameDetail(w, h int) string {
 
 	// Title row: NAME ............ REALTIME · 2–8 PLAYERS
 	name := t.Gradient(strings.ToUpper(info.Name), accent, 16, float64(m.frame)*0.01, true)
+	players := info.Players + " players"
+	if info.Players == "1" {
+		players = "single player"
+	}
 	meta := t.Dim.Render(strings.ToUpper(string(info.Kind))) + t.Faded.Render(" · ") +
-		t.Dim.Render(info.Players+" players")
+		t.Dim.Render(players)
 	head := []string{spread(name, meta, innerW), t.Dim.Italic(true).Render(info.Tagline)}
 
 	var art []string

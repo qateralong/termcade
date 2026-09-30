@@ -49,6 +49,14 @@ var migrations = []string{
 		last_seen   INTEGER NOT NULL,
 		logins      INTEGER NOT NULL DEFAULT 0
 	)`,
+	`CREATE TABLE scores (
+		id         INTEGER PRIMARY KEY,
+		player_id  INTEGER NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+		board      TEXT    NOT NULL,
+		score      INTEGER NOT NULL,
+		created_at INTEGER NOT NULL
+	);
+	CREATE INDEX scores_board ON scores (board, score)`,
 }
 
 // Open opens (creating if needed) the database at path and brings its schema
