@@ -3,9 +3,13 @@ package lineup
 
 import (
 	"termcade/internal/games"
+	"termcade/internal/games/chickenrun"
 	"termcade/internal/games/minesweeper"
 	"termcade/internal/games/pacman"
+	"termcade/internal/games/racing"
 	"termcade/internal/games/snake"
+	"termcade/internal/games/snakearena"
+	"termcade/internal/games/tanks"
 	"termcade/internal/games/tetris"
 )
 
@@ -17,5 +21,11 @@ func All() []games.Game {
 		snake.Game(),
 		minesweeper.Game(),
 	}
-	return append(solo, games.Upcoming()...)
+	multiplayer := []games.Game{
+		snakearena.Game(),
+		tanks.Game(),
+		chickenrun.Game(),
+		racing.Game(),
+	}
+	return append(append(solo, multiplayer...), games.Upcoming()...)
 }

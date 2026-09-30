@@ -49,19 +49,21 @@ already have.
 | Snake | One snake, one apple, a walled arena, and it gets faster as you grow |
 | Minesweeper | Easy, medium and hard boards, a safe first click, chording, and mouse support |
 
-**Multiplayer** (coming soon). A room starts as soon as it's full, or after
-20 seconds with bots in the empty seats.
+**Multiplayer**, with bots in any empty seats. A room starts as soon as it's
+full, or after 20 seconds with bots filling the gaps. A game in progress never
+takes new players: they get a fresh room. If someone leaves mid-match, a bot
+takes over their seat.
 
-| Game | Players |
-| --- | --- |
-| Snake Arena | 2–8 |
-| Tanks | 2–4 |
-| Chicken Run | 4 |
-| Racing | 4 |
-| Alien | 2–6 |
-| Battleship | 2 |
-| Durak | 2 |
-| Poker | 4 |
+| Game | Players | What it is |
+| --- | --- | --- |
+| Snake Arena | 6 | Everyone in one pit for two minutes. Dots score, and so does getting others to crash into you |
+| Tanks | 4 | Battle City–style battles on three maps with brick, steel, water and bushes. Three lives, last tank wins |
+| Chicken Run | 4 | Flip gravity to dodge obstacles and holes across five levels. The screen follows the leader |
+| Racing | 4 | Three laps on one of three tracks. Grass is slow |
+| Alien | 2–6 | 🛠 coming soon |
+| Battleship | 2 | 🛠 coming soon |
+| Durak | 2 | 🛠 coming soon |
+| Poker | 4 | 🛠 coming soon |
 
 ## Running it locally
 
@@ -205,10 +207,13 @@ internal/app        per-session UI: intro, setup, lobby, game host
 internal/hub        presence and lobby chat
 internal/games      the Game interface and upcoming games
 internal/games/solo shared frame for single-player games: title, pause, scores
+internal/games/multi rooms, matchmaking and bots for multiplayer games
 internal/games/*    one package per game; lineup/ sets the lobby order
 internal/store      SQLite persistence
 internal/textutil   name validation and text sanitizing
 internal/ui/theme   palette, gradients, logo
+internal/ui/canvas  half-block pixel graphics for the arcade games
+internal/ui/layout  overlays, padding and other text layout helpers
 ```
 
 ## Adding a game

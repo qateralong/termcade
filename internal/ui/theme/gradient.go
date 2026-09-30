@@ -75,3 +75,13 @@ func (t *Theme) Gradient(text string, stops []string, span int, phase float64, b
 	}
 	return out.String()
 }
+
+// Mix blends two hex colors: t=0 gives a, t=1 gives b.
+func Mix(a, b string, t float64) string {
+	ca, errA := colorful.Hex(a)
+	cb, errB := colorful.Hex(b)
+	if errA != nil || errB != nil {
+		return a
+	}
+	return ca.BlendRgb(cb, t).Clamped().Hex()
+}

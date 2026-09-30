@@ -11,6 +11,7 @@ import (
 	"github.com/charmbracelet/x/ansi"
 
 	"termcade/internal/games"
+	"termcade/internal/ui/layout"
 	"termcade/internal/ui/theme"
 )
 
@@ -225,13 +226,13 @@ func (m *model) View() string {
 	case phaseTitle:
 		body = m.viewTitle()
 	case phasePaused:
-		body = overlay(m.eng.View(), m.card(
+		body = layout.Overlay(m.eng.View(), m.card(
 			t.Title.Render("PAUSED"),
 			"",
 			m.keyLine("p", "resume", "r", "restart", "q", "leave"),
 		))
 	case phaseOver:
-		body = overlay(m.eng.View(), m.viewOver())
+		body = layout.Overlay(m.eng.View(), m.viewOver())
 	default:
 		body = m.eng.View()
 	}
@@ -340,13 +341,13 @@ func (m *model) viewTitle() string {
 		accent = theme.LogoGradient
 	}
 
-	name := t.Gradient(spaced(strings.ToUpper(info.Name)), accent, 16, 0, true)
+	name := t.Gradient(layout.Spaced(strings.ToUpper(info.Name)), accent, 16, 0, true)
 
 	// Controls column.
 	ctl := []string{t.Title.Render("CONTROLS")}
 	keys := append(append([]string{}, info.Controls...), "p", "pause")
 	for i := 0; i+1 < len(keys); i += 2 {
-		ctl = append(ctl, t.Key.Render(padRight(keys[i], 8))+t.Base.Render(keys[i+1]))
+		ctl = append(ctl, t.Key.Render(layout.PadRight(keys[i], 8))+t.Base.Render(keys[i+1]))
 	}
 
 	// Leaderboard column.
@@ -356,10 +357,10 @@ func (m *model) viewTitle() string {
 	}
 	for i, e := range m.top {
 		lb = append(lb, t.Faded.Render(strconv.Itoa(i+1)+". ")+
-			t.PlayerName(padRight(e.Name, 16), e.Color)+t.Bold.Render(padLeft(m.cfg.FormatScore(e.Score), 9)))
+			t.PlayerName(layout.PadRight(e.Name, 16), e.Color)+t.Bold.Render(layout.PadLeft(m.cfg.FormatScore(e.Score), 9)))
 	}
 	if m.hasBest {
-		lb = append(lb, "", t.Dim.Render(padRight("your best", 19))+t.Bold.Render(padLeft(m.cfg.FormatScore(m.best), 9)))
+		lb = append(lb, "", t.Dim.Render(layout.PadRight("your best", 19))+t.Bold.Render(layout.PadLeft(m.cfg.FormatScore(m.best), 9)))
 	}
 
 	cols := lipgloss.JoinHorizontal(lipgloss.Top,
@@ -399,7 +400,7 @@ func (m *model) viewOver() string {
 		lines = append(lines, "", t.Title.Render("TOP "+strconv.Itoa(len(m.top))))
 		for i, e := range m.top {
 			lines = append(lines, t.Faded.Render(strconv.Itoa(i+1)+". ")+
-				t.PlayerName(padRight(e.Name, 16), e.Color)+t.Bold.Render(padLeft(m.cfg.FormatScore(e.Score), 9)))
+				t.PlayerName(layout.PadRight(e.Name, 16), e.Color)+t.Bold.Render(layout.PadLeft(m.cfg.FormatScore(e.Score), 9)))
 		}
 	}
 	lines = append(lines, "", m.keyLine("enter", "again", "q", "leave"))
@@ -416,50 +417,4 @@ func (m *model) viewTooSmall(needW, needH int) string {
 		t.Faded.Render("resize the window, or press q to leave"),
 	)
 	return lipgloss.Place(m.w, m.h, lipgloss.Center, lipgloss.Center, body)
-}
-
-// overlay draws fg centered on top of bg.
-func overlay(bg, fg string) string {
-	bgLines := strings.Split(bg, "\n")
-	fgLines := strings.Split(fg, "\n")
-	bw := lipgloss.Width(bg)
-	fw := lipgloss.Width(fg)
-	if fw > bw || len(fgLines) > len(bgLines) {
-		return fg // the card doesn't fit; show it alone
-	}
-	x := (bw - fw) / 2
-	y := (len(bgLines) - len(fgLines)) / 2
-	for i, fl := range fgLines {
-		line := bgLines[y+i]
-		if w := ansi.StringWidth(line); w < bw {
-			line += strings.Repeat(" ", bw-w)
-		}
-		left := ansi.Truncate(line, x, "")
-		right := ansi.Cut(line, x+ansi.StringWidth(fl), bw)
-		bgLines[y+i] = left + "\x1b[0m" + fl + "\x1b[0m" + right
-	}
-	return strings.Join(bgLines, "\n")
-}
-
-func spaced(s string) string {
-	r := []rune(s)
-	out := make([]string, len(r))
-	for i, c := range r {
-		out[i] = string(c)
-	}
-	return strings.Join(out, " ")
-}
-
-func padRight(s string, w int) string {
-	if n := w - lipgloss.Width(s); n > 0 {
-		return s + strings.Repeat(" ", n)
-	}
-	return s
-}
-
-func padLeft(s string, w int) string {
-	if n := w - lipgloss.Width(s); n > 0 {
-		return strings.Repeat(" ", n) + s
-	}
-	return s
 }
