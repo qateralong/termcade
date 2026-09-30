@@ -1,0 +1,13 @@
+# Runtime data: host key and database
+/data/
+
+# Binaries
+/termcade
+*.exe
+/dist/
+
+# Editors and OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
