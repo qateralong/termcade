@@ -6,9 +6,11 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
@@ -33,7 +35,10 @@ type Config struct {
 
 type ctxKey struct{ name string }
 
-var appKey = &ctxKey{"app"}
+var (
+	appKey   = &ctxKey{"app"}
+	themeKey = &ctxKey{"theme"}
+)
 
 // New returns a configured, not yet listening, SSH server.
 func New(cfg Config, deps app.Deps) (*ssh.Server, error) {
@@ -82,7 +87,9 @@ func programHandler(deps app.Deps) bm.ProgramHandler {
 			program.Send(msg)
 		}
 
-		a := app.New(deps, theme.New(bm.MakeRenderer(sess)), id, send)
+		th := theme.New(newRenderer(sess))
+		sess.Context().SetValue(themeKey, th)
+		a := app.New(deps, th, id, send)
 		sess.Context().SetValue(appKey, a)
 
 		opts := append(bm.MakeOptions(sess), tea.WithAltScreen())
@@ -99,7 +106,10 @@ func farewell(logger *log.Logger) wish.Middleware {
 		return func(sess ssh.Session) {
 			if a, ok := sess.Context().Value(appKey).(*app.App); ok {
 				a.Close()
-				th := theme.New(bm.MakeRenderer(sess))
+				th, _ := sess.Context().Value(themeKey).(*theme.Theme)
+				if th == nil {
+					th = theme.New(newRenderer(sess))
+				}
 				logo := th.Gradient("◆ "+theme.Name, theme.LogoGradient, 12, 0, true)
 				switch name := a.Name(); {
 				case a.ShuttingDown():
@@ -125,4 +135,40 @@ func ListenAndServe(srv *ssh.Server, addr string) (net.Addr, error) {
 	}
 	go srv.Serve(ln)
 	return ln.Addr(), nil
+}
+
+// newRenderer builds a lipgloss renderer for a session from its TERM and
+// environment.
+//
+// wish's bubbletea.MakeRenderer is deliberately not used: on Unix it asks the
+// client terminal for its background color and blocks until an answer or a
+// keypress arrives, swallowing that keypress. Clients that don't answer
+// would hang on connect and on disconnect. Instead we assume a dark
+// background, which the neon theme is designed for anyway.
+func newRenderer(sess ssh.Session) *lipgloss.Renderer {
+	pty, _, _ := sess.Pty()
+	env := sshEnviron(append(sess.Environ(), "TERM="+pty.Term))
+	r := lipgloss.NewRenderer(sess,
+		termenv.WithEnvironment(env), termenv.WithUnsafe(), termenv.WithColorCache(true))
+	// Most SSH clients don't forward COLORTERM, so a capable terminal often
+	// looks like a basic one. 256 colors are supported practically everywhere.
+	if pty.Term != "dumb" && r.ColorProfile() > termenv.ANSI256 {
+		r.SetColorProfile(termenv.ANSI256)
+	}
+	r.SetHasDarkBackground(true)
+	return r
+}
+
+// sshEnviron exposes a session's environment to termenv.
+type sshEnviron []string
+
+func (e sshEnviron) Environ() []string { return e }
+
+func (e sshEnviron) Getenv(key string) string {
+	for _, kv := range e {
+		if v, ok := strings.CutPrefix(kv, key+"="); ok {
+			return v
+		}
+	}
+	return ""
 }
