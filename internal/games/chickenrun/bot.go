@@ -3,9 +3,9 @@ package chickenrun
 import "time"
 
 const (
-	botThink    = 90 * time.Millisecond
+	botThink    = 130 * time.Millisecond
 	botLookHead = 1400 * time.Millisecond
-	botMistakes = 6 // percent chance to ignore a good flip
+	botMistakes = 12 // percent chance to ignore a good flip
 )
 
 // think decides whether a bot chicken should flip: it simulates the next
@@ -33,7 +33,7 @@ func (w *World) simulate(c chicken, flipNow bool) float64 {
 	cam := w.camX
 	startX := c.x
 	for t := time.Duration(0); t < botLookHead; t += step {
-		if !w.physics(&c, step.Seconds(), w.speed) {
+		if w.physics(&c, step.Seconds(), w.speed, w.clock+t+step) != "" {
 			return c.x - startX - 1000
 		}
 		cam += w.speed * step.Seconds()

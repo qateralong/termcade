@@ -58,6 +58,9 @@ func (w *World) aim(seat int) (int, int) {
 		}
 	}
 	var cands []cell
+	if w.rng.IntN(3) == 0 {
+		biggest = 1 // a careless shot anywhere
+	}
 	offset := w.rng.IntN(biggest)
 	for y := 0; y < N; y++ {
 		for x := 0; x < N; x++ {

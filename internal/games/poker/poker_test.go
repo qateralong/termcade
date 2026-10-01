@@ -99,6 +99,21 @@ func TestSidePots(t *testing.T) {
 	}
 }
 
+func TestUncalledBetIsReturned(t *testing.T) {
+	w := New(seatsOf(2, false), rand.New(rand.NewPCG(9, 9)))
+	for _, p := range w.p {
+		p.contrib, p.won, p.chips = 0, 0, 0
+	}
+	// A short all-in for 2 against a 40 blind, and then a fold: the all-in
+	// player wins 4, and the other 38 go back to the folder.
+	w.p[0].contrib, w.p[1].contrib = 2, 40
+	w.p[1].folded = true
+	w.award([][]int{{0}}, false)
+	if w.p[0].chips != 4 || w.p[1].chips != 38 {
+		t.Fatalf("chips: %d and %d", w.p[0].chips, w.p[1].chips)
+	}
+}
+
 func TestBettingRound(t *testing.T) {
 	w := New(seatsOf(3, false), rand.New(rand.NewPCG(2, 2)))
 	start := totalChips(w)

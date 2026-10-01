@@ -81,5 +81,6 @@ var achievements = []achievement{
 	{"Box Mover", "solve 5 Sokoban levels", func(s summary) bool { return s.solved("sokoban") >= 5 }},
 	{"Wall Breaker", "clear a whole wall in Breakout", func(s summary) bool { return s.best("breakout") >= 2880 }},
 	{"Earth Defender", "2,000 points in Space Invaders", func(s summary) bool { return s.best("invaders") >= 2000 }},
+	{"Giant Slayer", "beat all five bosses in Boss Rush", func(s summary) bool { return s.best("bossrush") >= 15000 }},
 	{"Night Shift", "spend 2 hours in the arcade", func(s summary) bool { return s.online >= 2*time.Hour }},
 }

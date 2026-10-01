@@ -44,7 +44,7 @@ func (w *World) think(s *snake, occ map[pt]bool) {
 		if d == s.dir {
 			score += 2 // slight preference for going straight
 		}
-		score += w.rng.IntN(3)
+		score += w.rng.IntN(60)
 		if score > bestScore {
 			bestScore, choice = score, d
 		}

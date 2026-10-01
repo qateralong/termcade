@@ -4,7 +4,7 @@ import (
 	"termcade/internal/games/cards"
 )
 
-const simulations = 160
+const simulations = 90
 
 // equity estimates seat's chance to win the hand against the players still
 // in, by dealing out random opponent hands and boards. Bots only use what

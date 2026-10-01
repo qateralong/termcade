@@ -113,19 +113,33 @@ func New(seatsInfo []multi.SeatInfo, rng *rand.Rand, n int) *World {
 	return w
 }
 
-func (w *World) solid(px, py int) bool {
+func (w *World) solid(px, py int, t time.Duration) bool {
 	if px < 0 {
 		return true
 	}
-	return w.lv.at(px/tile, int(math.Floor(float64(py)/tile)))
+	return w.lv.at(px/tile, int(math.Floor(float64(py)/tile))) || w.lv.moverAt(px, py, t)
 }
 
-// blocked reports whether a chicken at (x, y) overlaps anything solid.
-func (w *World) blocked(x, y float64) bool {
+// blocked reports whether a chicken at (x, y) overlaps anything solid at
+// time t.
+func (w *World) blocked(x, y float64, t time.Duration) bool {
 	x0, y0 := int(math.Floor(x)), int(math.Floor(y))
 	for py := y0; py < y0+size; py++ {
 		for px := x0; px < x0+size; px++ {
-			if py >= 0 && py < H && w.solid(px, py) {
+			if py >= 0 && py < H && w.solid(px, py, t) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// spiked reports whether a chicken at (x, y) touches spikes.
+func (w *World) spiked(x, y float64) bool {
+	x0, y0 := int(math.Floor(x)), int(math.Floor(y))
+	for py := y0; py < y0+size; py++ {
+		for px := x0; px < x0+size; px++ {
+			if px >= 0 && w.lv.spikeAt(px/tile, int(math.Floor(float64(py)/tile))) {
 				return true
 			}
 		}
@@ -134,7 +148,7 @@ func (w *World) blocked(x, y float64) bool {
 }
 
 func (w *World) grounded(c *chicken) bool {
-	return w.blocked(c.x, c.y+c.grav)
+	return w.blocked(c.x, c.y+c.grav, w.clock)
 }
 
 func (w *World) flip(c *chicken, to float64) {
@@ -166,17 +180,21 @@ func (w *World) Input(seat int, key string) {
 // SetBot implements multi.World.
 func (w *World) SetBot(seat int) { w.chickens[seat].bot = true }
 
-// physics advances one chicken by dt seconds. It reports whether it is
-// still alive.
-func (w *World) physics(c *chicken, secs, speed float64) bool {
+// physics advances one chicken by secs seconds, ending at time t. It
+// returns why the chicken was knocked out, or "" if it's fine.
+func (w *World) physics(c *chicken, secs, speed float64, t time.Duration) string {
+	// A crusher sliding onto you is the end.
+	if w.blocked(c.x, c.y, t) {
+		return "crushed"
+	}
 	// Run forward; walls stop you.
 	nx := c.x + speed*secs
-	if !w.blocked(nx, c.y) {
+	if !w.blocked(nx, c.y, t) {
 		c.x = nx
 	} else {
 		// Creep up to the wall.
 		for step := 0.25; step <= speed*secs; step += 0.25 {
-			if w.blocked(c.x+0.25, c.y) {
+			if w.blocked(c.x+0.25, c.y, t) {
 				break
 			}
 			c.x += 0.25
@@ -185,16 +203,22 @@ func (w *World) physics(c *chicken, secs, speed float64) bool {
 	// Fall.
 	c.vy = math.Max(-maxFall, math.Min(maxFall, c.vy+gravity*c.grav*secs))
 	ny := c.y + c.vy*secs
-	if !w.blocked(c.x, ny) {
+	if !w.blocked(c.x, ny, t) {
 		c.y = ny
 	} else {
 		// Land flush against the surface.
-		for i := 0; i < 20 && !w.blocked(c.x, c.y+c.grav*0.25); i++ {
+		for i := 0; i < 20 && !w.blocked(c.x, c.y+c.grav*0.25, t); i++ {
 			c.y += c.grav * 0.25
 		}
 		c.vy = 0
 	}
-	return c.y > -size && c.y < H
+	switch {
+	case w.spiked(c.x, c.y):
+		return "spiked"
+	case c.y <= -size || c.y >= H:
+		return "fell"
+	}
+	return ""
 }
 
 // Step implements multi.World.
@@ -210,8 +234,8 @@ func (w *World) Step(dt time.Duration) {
 		if c.bot {
 			w.think(c)
 		}
-		if !w.physics(c, secs, w.speed) {
-			w.knockOut(i, c, "fell")
+		if why := w.physics(c, secs, w.speed, w.clock); why != "" {
+			w.knockOut(i, c, why)
 			continue
 		}
 		if c.x >= float64(w.lv.finish*tile) {
@@ -331,6 +355,46 @@ func (w *World) View(seat int, th *theme.Theme) string {
 				cv.Set(sx, y, "#8A6A4E")
 			default:
 				cv.Set(sx, y, "#6B4F3A")
+			}
+		}
+	}
+
+	// Spikes: pale tips on a dark red base, pointing away from the surface
+	// they sit on (or both ways for blocks hanging in mid-air).
+	for y := 0; y < H; y++ {
+		for sx := 0; sx < W; sx++ {
+			px := cam + sx
+			col, row := px/tile, y/tile
+			if !w.lv.spikeAt(col, row) {
+				continue
+			}
+			tip := (px+y)%2 == 0
+			switch {
+			case tip:
+				cv.Set(sx, y, "#E8E8F0")
+			default:
+				cv.Set(sx, y, "#B03040")
+			}
+		}
+	}
+	// Crushers.
+	for _, m := range w.lv.movers {
+		top := m.top(w.clock) * tile
+		for y := 0; y < m.height*tile; y++ {
+			for x := 0; x < m.width*tile; x++ {
+				sx := m.col*tile + x - cam
+				py := int(top) + y
+				if sx < 0 || sx >= W || py < 0 || py >= H {
+					continue
+				}
+				col := "#8A93A6"
+				if (x+y)%2 == 0 {
+					col = "#C5CCDA"
+				}
+				if y == 0 || y == m.height*tile-1 {
+					col = "#FFC940" // hazard stripes on the ends
+				}
+				cv.Set(sx, py, col)
 			}
 		}
 	}

@@ -5,8 +5,8 @@ import "time"
 // Bots react a little slower than a person and don't always pull the
 // trigger, so humans have a fighting chance.
 const (
-	thinkEvery   = 280 * time.Millisecond
-	fireChance   = 55 // percent, when an enemy is in the line of fire
+	thinkEvery   = 340 * time.Millisecond
+	fireChance   = 42 // percent, when an enemy is in the line of fire
 	noticeRadius = 26 // pixels; enemies farther away are hunted, not shot
 )
 

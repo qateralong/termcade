@@ -54,6 +54,7 @@ already have.
 | Sokoban | Ten hand-made warehouse puzzles, each checked solvable by a solver in the tests; fewest moves wins |
 | Breakout | Six rows of bricks; where the ball hits the paddle sets its angle; faster every level |
 | Space Invaders | A marching fleet that speeds up as it thins, crumbling shields, a mystery ship and endless waves |
+| Boss Rush | Five bosses back to back: dodge bone walls, fire, lasers and rings with your heart, jump in gravity mode, and strike with a timing bar |
 
 **Multiplayer**, with bots in any empty seats. A room starts as soon as it's
 full, or after 20 seconds with bots filling the gaps. A game in progress never
@@ -65,8 +66,10 @@ moves for you if it runs out.
 | --- | --- | --- |
 | Snake Arena | 6 | Everyone in one pit for two minutes. Dots score, and so does getting others to crash into you |
 | Tanks | 4 | Battle City–style battles on three maps with brick, steel, water and bushes. Three lives, last tank wins |
-| Chicken Run | 4 | Flip gravity to dodge obstacles and holes across five levels. The screen follows the leader |
+| Chicken Run | 4 | Flip gravity past holes, pillars, spikes, hanging saws and sliding crushers across five levels. The screen follows the leader |
 | Racing | 4 | Three laps on one of three tracks. Grass is slow |
+| Tron | 6 | Light cycles leave walls behind them; boost to cut others off. Last rider wins |
+| Bomberman | 4 | Bombs, chain reactions, crates hiding power-ups. Last one standing wins |
 | Alien | 6 | Saucers orbit an alien; space reverses. Dodge beams, sweeps and orbs. Last one flying wins |
 | Battleship | 2 | Russian rules: ships never touch, and a hit earns another shot |
 | Durak | 2 | Podkidnoy durak with a 36-card deck: attack, defend, pile on, take |

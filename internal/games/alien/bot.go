@@ -6,7 +6,7 @@ import (
 
 const (
 	botEvery    = 80 * time.Millisecond
-	botMistakes = 7 // percent
+	botMistakes = 12 // percent
 )
 
 // think reverses a bot saucer when it sees that staying on course will get
@@ -21,7 +21,7 @@ func (w *World) think(s *saucer) {
 	for _, h := range w.hazards {
 		at, ok := s.reactAt[h]
 		if !ok {
-			at = h.start + time.Duration(180+w.rng.IntN(300))*time.Millisecond
+			at = h.start + time.Duration(260+w.rng.IntN(380))*time.Millisecond
 			s.reactAt[h] = at
 		}
 		if w.clock >= at {

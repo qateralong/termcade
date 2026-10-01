@@ -126,3 +126,24 @@ func TestDoingNothingLoses(t *testing.T) {
 		}
 	}
 }
+
+func TestObstacleVariety(t *testing.T) {
+	for _, spec := range levels {
+		l := buildLevel(spec)
+		spikes := 0
+		for r := range l.spike {
+			for c := range l.spike[r] {
+				if l.spike[r][c] {
+					spikes++
+				}
+			}
+		}
+		if spec.spikes > 0 && spikes == 0 {
+			t.Errorf("%s has no spikes", spec.name)
+		}
+		if spec.crushers > 0 && len(l.movers) == 0 {
+			t.Errorf("%s has no crushers", spec.name)
+		}
+		t.Logf("%s: %d spike tiles, %d crushers", spec.name, spikes, len(l.movers))
+	}
+}

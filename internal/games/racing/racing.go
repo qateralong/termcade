@@ -103,7 +103,7 @@ func New(seatsInfo []multi.SeatInfo, rng *rand.Rand, n int) *World {
 		heading := int(math.Round(dir/(2*math.Pi)*turnSteps)+turnSteps) % turnSteps
 		c := &car{info: s, bot: s.Bot, pos: p, heading: heading, skill: 1}
 		if s.Bot {
-			c.skill = 0.82 + rng.Float64()*0.14
+			c.skill = 0.74 + rng.Float64()*0.14
 		}
 		c.along, _ = w.tr.project(p)
 		c.dist = w.tr.wrap(c.along - w.startS) // slightly negative: behind the line

@@ -419,6 +419,23 @@ func (w *World) award(groups [][]int, shown bool) {
 		for _, p := range w.p {
 			slice += max(0, min(p.contrib, lv)-prev)
 		}
+		// Chips nobody still in the hand matched (an uncalled bet) go back
+		// to whoever put them in.
+		eligible := false
+		for _, g := range groups {
+			for _, i := range g {
+				if w.p[i].contrib >= lv {
+					eligible = true
+				}
+			}
+		}
+		if !eligible {
+			for _, p := range w.p {
+				p.chips += max(0, min(p.contrib, lv)-prev)
+			}
+			prev = lv
+			continue
+		}
 		prev = lv
 		// The best group with someone eligible for this level wins it.
 		for _, g := range groups {
