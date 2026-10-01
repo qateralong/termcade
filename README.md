@@ -50,6 +50,10 @@ already have.
 | Tetris | Modern rules: SRS rotation with wall kicks, 7-bag, hold, ghost piece, next queue, lock delay |
 | Snake | One snake, one apple, a walled arena, and it gets faster as you grow |
 | Minesweeper | Easy, medium and hard boards, a safe first click, chording, and mouse support |
+| 2048 | Slide and merge tiles; reach 2048 and keep going, with one undo |
+| Sokoban | Ten hand-made warehouse puzzles, each checked solvable by a solver in the tests; fewest moves wins |
+| Breakout | Six rows of bricks; where the ball hits the paddle sets its angle; faster every level |
+| Space Invaders | A marching fleet that speeds up as it thins, crumbling shields, a mystery ship and endless waves |
 
 **Multiplayer**, with bots in any empty seats. A room starts as soon as it's
 full, or after 20 seconds with bots filling the gaps. A game in progress never

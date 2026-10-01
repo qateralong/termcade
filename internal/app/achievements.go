@@ -1,6 +1,7 @@
 package app
 
 import (
+	"strings"
 	"time"
 
 	"termcade/internal/store"
@@ -44,6 +45,18 @@ func (s summary) best(board string) int {
 	return 0
 }
 
+// solved counts the variant boards of a game with a recorded result, such
+// as solved Sokoban levels.
+func (s summary) solved(game string) int {
+	n := 0
+	for board := range s.bests {
+		if strings.HasPrefix(board, game+":") {
+			n++
+		}
+	}
+	return n
+}
+
 type achievement struct {
 	name, desc string
 	done       func(summary) bool
@@ -64,5 +77,9 @@ var achievements = []achievement{
 		_, ok := s.bests["minesweeper:hard"]
 		return ok
 	}},
+	{"Doubling Up", "20,000 points in 2048", func(s summary) bool { return s.best("2048") >= 20000 }},
+	{"Box Mover", "solve 5 Sokoban levels", func(s summary) bool { return s.solved("sokoban") >= 5 }},
+	{"Wall Breaker", "clear a whole wall in Breakout", func(s summary) bool { return s.best("breakout") >= 2880 }},
+	{"Earth Defender", "2,000 points in Space Invaders", func(s summary) bool { return s.best("invaders") >= 2000 }},
 	{"Night Shift", "spend 2 hours in the arcade", func(s summary) bool { return s.online >= 2*time.Hour }},
 }

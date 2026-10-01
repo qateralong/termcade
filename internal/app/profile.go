@@ -248,6 +248,12 @@ func (m *App) bestFor(game string) string {
 	if b, ok := m.profile.bests[game]; ok {
 		return solo.Thousands(b.Max)
 	}
+	if game == "sokoban" {
+		if n := m.summary().solved(game); n > 0 {
+			return itoa(n) + " lvls"
+		}
+		return ""
+	}
 	// Variant boards, e.g. "minesweeper:hard": show the fastest time.
 	bestTime := -1
 	for board, b := range m.profile.bests {
