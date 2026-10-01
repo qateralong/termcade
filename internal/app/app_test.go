@@ -111,7 +111,7 @@ func TestSetupFlowCreatesPlayer(t *testing.T) {
 
 func TestComingSoonGameDoesNotLaunch(t *testing.T) {
 	m := newTestApp(t, Identity{SessionID: "s1"})
-	m.deps.Games = games.NewRegistry(games.Upcoming()...)
+	m.deps.Games = games.NewRegistry(games.ComingSoon(games.Info{ID: "soon", Name: "Soon", Icon: "*"}))
 	m.name = "guesty"
 	m.enterLobby()
 	m.Update(tea.KeyMsg{Type: tea.KeyEnter})

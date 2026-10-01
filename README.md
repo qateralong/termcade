@@ -52,7 +52,8 @@ already have.
 **Multiplayer**, with bots in any empty seats. A room starts as soon as it's
 full, or after 20 seconds with bots filling the gaps. A game in progress never
 takes new players: they get a fresh room. If someone leaves mid-match, a bot
-takes over their seat.
+takes over their seat. In turn-based games every move has a timer, and a bot
+moves for you if it runs out.
 
 | Game | Players | What it is |
 | --- | --- | --- |
@@ -60,10 +61,10 @@ takes over their seat.
 | Tanks | 4 | Battle City–style battles on three maps with brick, steel, water and bushes. Three lives, last tank wins |
 | Chicken Run | 4 | Flip gravity to dodge obstacles and holes across five levels. The screen follows the leader |
 | Racing | 4 | Three laps on one of three tracks. Grass is slow |
-| Alien | 2–6 | 🛠 coming soon |
-| Battleship | 2 | 🛠 coming soon |
-| Durak | 2 | 🛠 coming soon |
-| Poker | 4 | 🛠 coming soon |
+| Alien | 6 | Saucers orbit an alien; space reverses. Dodge beams, sweeps and orbs. Last one flying wins |
+| Battleship | 2 | Russian rules: ships never touch, and a hit earns another shot |
+| Durak | 2 | Podkidnoy durak with a 36-card deck: attack, defend, pile on, take |
+| Poker | 4 | No-limit Texas hold'em with climbing blinds, side pots and Monte Carlo bots |
 
 ## Running it locally
 
@@ -208,6 +209,7 @@ internal/hub        presence and lobby chat
 internal/games      the Game interface and upcoming games
 internal/games/solo shared frame for single-player games: title, pause, scores
 internal/games/multi rooms, matchmaking and bots for multiplayer games
+internal/games/cards playing cards and their rendering
 internal/games/*    one package per game; lineup/ sets the lobby order
 internal/store      SQLite persistence
 internal/textutil   name validation and text sanitizing

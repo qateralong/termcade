@@ -88,6 +88,7 @@ type Game struct {
 // New returns a multiplayer game.
 func New(cfg Config) *Game {
 	cfg.Info.Mode = games.Multiplayer
+	cfg.Info.Description += " Rooms start when full, or after 20 seconds with bots in the empty seats."
 	if cfg.Wait == 0 {
 		cfg.Wait = 20 * time.Second
 	}
