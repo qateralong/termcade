@@ -1,4 +1,4 @@
-package pacman
+package muncher
 
 import (
 	"io"
@@ -89,7 +89,7 @@ func TestPelletFrightensAndGhostIsEaten(t *testing.T) {
 	e.pac.dir, e.want = dirUp, dirUp
 	e.movePac()
 	if e.fright == 0 || !g.frightened {
-		t.Fatal("pellet didn't frighten Blinky")
+		t.Fatal("pellet didn't frighten Chaser")
 	}
 	before := e.score
 	g.pos = e.pac.pos

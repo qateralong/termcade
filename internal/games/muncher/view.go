@@ -1,4 +1,4 @@
-package pacman
+package muncher
 
 import (
 	"strings"
@@ -56,7 +56,7 @@ func (e *Engine) View() string {
 	if e.phase != phaseCleared {
 		for _, g := range e.ghosts {
 			if e.phase == phaseDying && e.phaseTime > dyingTime/3 {
-				break // ghosts vanish while Pac-Man dies
+				break // ghosts vanish while the muncher dies
 			}
 			grid[g.pos.y][g.pos.x] = e.ghostGlyph(g)
 		}

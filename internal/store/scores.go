@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-// A board is a named leaderboard, such as "tetris" or "minesweeper:hard".
+// A board is a named leaderboard, such as "blockfall" or "minesweeper:hard".
 // Boards rank either higher or lower scores as better (points versus times).
 
 // ScoreEntry is one row of a leaderboard: a player's best score on a board.

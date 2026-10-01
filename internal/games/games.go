@@ -66,7 +66,7 @@ type ScoreEntry struct {
 }
 
 // ScoreBook records results and reads leaderboards. A board is a
-// leaderboard name such as "tetris" or "minesweeper:hard"; lowerIsBetter
+// leaderboard name such as "blockfall" or "minesweeper:hard"; lowerIsBetter
 // selects whether it ranks times or points. Guests' results only live for
 // their session.
 type ScoreBook interface {

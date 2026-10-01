@@ -16,7 +16,7 @@ func TestScores(t *testing.T) {
 	bob, _ := s.CreatePlayer(ctx, "bob", "cyan", "", "fb")
 	carol, _ := s.CreatePlayer(ctx, "carol", "lime", "", "fc")
 
-	if _, ok, err := s.BestScore(ctx, alice.ID, "tetris", false); ok || err != nil {
+	if _, ok, err := s.BestScore(ctx, alice.ID, "blockfall", false); ok || err != nil {
 		t.Fatalf("empty best: ok=%v err=%v", ok, err)
 	}
 
@@ -24,16 +24,16 @@ func TestScores(t *testing.T) {
 		id    int64
 		score int
 	}{{alice.ID, 100}, {alice.ID, 900}, {bob.ID, 500}, {carol.ID, 900}, {bob.ID, 50}} {
-		if err := s.AddScore(ctx, r.id, "tetris", r.score); err != nil {
+		if err := s.AddScore(ctx, r.id, "blockfall", r.score); err != nil {
 			t.Fatal(err)
 		}
 	}
 	s.AddScore(ctx, bob.ID, "snake", 99999) // other boards don't leak in
 
-	if best, ok, _ := s.BestScore(ctx, bob.ID, "tetris", false); !ok || best != 500 {
+	if best, ok, _ := s.BestScore(ctx, bob.ID, "blockfall", false); !ok || best != 500 {
 		t.Fatalf("bob best = %d, %v", best, ok)
 	}
-	top, err := s.TopScores(ctx, "tetris", false, 10)
+	top, err := s.TopScores(ctx, "blockfall", false, 10)
 	if err != nil {
 		t.Fatal(err)
 	}

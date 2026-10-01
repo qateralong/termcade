@@ -99,6 +99,12 @@ var migrations = []string{
 		created_at  INTEGER NOT NULL
 	);
 	CREATE INDEX results_player ON results (player_id, game)`,
+
+	// Two games were renamed; keep their scores and results.
+	`UPDATE scores SET board = 'blockfall' WHERE board = 'tetris';
+	UPDATE scores SET board = 'muncher' WHERE board = 'pacman';
+	UPDATE results SET game = 'blockfall' WHERE game = 'tetris';
+	UPDATE results SET game = 'muncher' WHERE game = 'pacman'`,
 }
 
 // Open opens (creating if needed) the database at path and brings its schema

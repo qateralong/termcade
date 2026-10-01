@@ -1,6 +1,6 @@
-// Package pacman is a maze chase: eat every dot while four ghosts, each
+// Package muncher is a maze chase: eat every dot while four ghosts, each
 // with its own personality, try to catch you.
-package pacman
+package muncher
 
 import (
 	"math/rand/v2"
@@ -13,15 +13,15 @@ import (
 	"termcade/internal/ui/theme"
 )
 
-// Game returns the Pac-Man game.
+// Game returns the Maze Muncher game.
 func Game() games.Game {
 	return solo.New(solo.Config{
 		Info: games.Info{
-			ID:          "pacman",
-			Name:        "Pac-Man",
+			ID:          "muncher",
+			Name:        "Maze Muncher",
 			Icon:        "◖",
 			Tagline:     "Eat the dots. Run from the ghosts. Then turn the tables.",
-			Description: "Clear the maze while Blinky, Pinky, Inky and Clyde hunt you, each in their own way. Grab a power pellet and they're yours for a few seconds.",
+			Description: "Clear the maze while Chaser, Ambusher, Flanker and Drifter hunt you, each in their own way. Grab a power pellet and they're yours for a few seconds.",
 			Kind:        games.Realtime,
 			Players:     "1",
 			Controls:    []string{"←↑→↓", "move", "wasd", "move"},
@@ -125,7 +125,7 @@ type mover struct {
 	acc float64 // progress toward the next cell
 }
 
-// Engine is one game of Pac-Man.
+// Engine is one game of Maze Muncher.
 type Engine struct {
 	th  *theme.Theme
 	rng *rand.Rand
@@ -371,7 +371,7 @@ func (e *Engine) addScore(n int) {
 	}
 }
 
-// collide resolves Pac-Man touching ghosts.
+// collide resolves the muncher touching ghosts.
 func (e *Engine) collide() {
 	for _, g := range e.ghosts {
 		if g.pos != e.pac.pos || g.mode != ghostActive {

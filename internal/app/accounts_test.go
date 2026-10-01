@@ -227,12 +227,12 @@ func TestProfileShowsResultsAndFits(t *testing.T) {
 	m.submitRegister()
 
 	m.scores.Record(games.Result{Game: "tanks", Multiplayer: true, Place: 1, Seats: 4, Won: true})
-	m.scores.Record(games.Result{Game: "tetris", Seats: 1, Score: 12000})
-	m.scores.Submit("tetris", false, 12000)
+	m.scores.Record(games.Result{Game: "blockfall", Seats: 1, Score: 12000})
+	m.scores.Submit("blockfall", false, 12000)
 
 	m.Update(key("p"))
 	view := m.View()
-	for _, want := range []string{"Tanks", "Tetris", "12,000", "First Victory", "Block Master"} {
+	for _, want := range []string{"Tanks", "Blockfall", "12,000", "First Victory", "Block Master"} {
 		if !strings.Contains(view, want) {
 			t.Errorf("profile is missing %q", want)
 		}

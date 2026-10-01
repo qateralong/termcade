@@ -1,4 +1,4 @@
-package pacman
+package muncher
 
 import (
 	"strings"
@@ -7,7 +7,7 @@ import (
 // The maze is 28×22 cells. Legend:
 //
 //	#  wall        .  dot          o  power pellet
-//	-  ghost door  G  ghost house  P  Pac-Man's start
+//	-  ghost door  G  ghost house  P  the muncher's start
 //	   (space) empty corridor; rows open at both edges are tunnels
 var layout = []string{
 	"############################",

@@ -5,7 +5,11 @@
 # "termcade install", which sets up the systemd service. After that, updating
 # is just: sudo termcade update
 #
-# Usage, from a private repository (the token needs read access to it):
+# Usage:
+#
+#   curl -fsSL https://raw.githubusercontent.com/qateralong/termcade/main/deploy/install.sh | sudo bash
+#
+# From a private fork, pass a token with read access to it:
 #
 #   read -rs GITHUB_TOKEN && export GITHUB_TOKEN
 #   curl -fsSL -H "Authorization: Bearer $GITHUB_TOKEN" \

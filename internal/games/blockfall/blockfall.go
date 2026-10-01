@@ -1,6 +1,6 @@
-// Package tetris is a modern falling-blocks game: SRS rotation with wall
+// Package blockfall is a modern falling-blocks game: SRS rotation with wall
 // kicks, a 7-bag randomizer, hold, ghost piece, next queue and lock delay.
-package tetris
+package blockfall
 
 import (
 	"math"
@@ -34,12 +34,12 @@ const (
 
 var lineScores = [5]int{0, 100, 300, 500, 800}
 
-// Game returns the tetris game.
+// Game returns the Blockfall game.
 func Game() games.Game {
 	return solo.New(solo.Config{
 		Info: games.Info{
-			ID:          "tetris",
-			Name:        "Tetris",
+			ID:          "blockfall",
+			Name:        "Blockfall",
 			Icon:        "▦",
 			Tagline:     "Stack, spin, clear. Faster and faster.",
 			Description: "Guide falling blocks into complete lines. Hold a piece for later, spin it into tight spots with wall kicks, and chase the next level.",
@@ -76,7 +76,7 @@ func (p piece) cells() [4]cellPos {
 	return out
 }
 
-// Engine is one game of tetris.
+// Engine is one game of Blockfall.
 type Engine struct {
 	th  *theme.Theme
 	rng *rand.Rand
@@ -290,7 +290,7 @@ func (e *Engine) removeCleared() {
 	e.spawn(e.pop())
 }
 
-// fallInterval is the time per row at the current level (Tetris guideline).
+// fallInterval is the time per row at the current level (the modern guideline curve).
 func (e *Engine) fallInterval() time.Duration {
 	l := float64(e.level - 1)
 	secs := math.Pow(0.8-l*0.007, l)

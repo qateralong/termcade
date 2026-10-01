@@ -140,7 +140,7 @@ func TestResults(t *testing.T) {
 	add("tanks", true, 1, true)
 	add("tanks", true, 3, false)
 	add("tanks", true, 4, false)
-	add("tetris", false, 0, false)
+	add("blockfall", false, 0, false)
 
 	stats, err := s.GameStats(ctx, p.ID)
 	if err != nil || len(stats) != 2 {
@@ -151,10 +151,10 @@ func TestResults(t *testing.T) {
 		t.Fatalf("tanks stats = %+v", tanks)
 	}
 
-	s.AddScore(ctx, p.ID, "tetris", 500)
-	s.AddScore(ctx, p.ID, "tetris", 900)
+	s.AddScore(ctx, p.ID, "blockfall", 500)
+	s.AddScore(ctx, p.ID, "blockfall", 900)
 	best, _ := s.BestScores(ctx, p.ID)
-	if best["tetris"] != (Bests{Max: 900, Min: 500}) {
+	if best["blockfall"] != (Bests{Max: 900, Min: 500}) {
 		t.Fatalf("best = %+v", best)
 	}
 }
@@ -184,7 +184,8 @@ func TestReopenKeepsData(t *testing.T) {
 }
 
 // TestMigratesOldDatabase builds a database the way version 0.0.6 left it
-// and checks that players, their keys and scores survive the upgrade.
+// and checks that players, their keys and scores survive the upgrade,
+// including scores of games that were renamed since.
 func TestMigratesOldDatabase(t *testing.T) {
 	ctx := context.Background()
 	path := filepath.Join(t.TempDir(), "old.db")
@@ -212,7 +213,7 @@ func TestMigratesOldDatabase(t *testing.T) {
 	if err != nil || p.Name != "veteran" || p.Logins != 7 || p.HasPassword {
 		t.Fatalf("migrated player = %+v, %v", p, err)
 	}
-	if best, _, _ := s.BestScore(ctx, p.ID, "tetris", false); best != 4242 {
+	if best, _, _ := s.BestScore(ctx, p.ID, "blockfall", false); best != 4242 {
 		t.Fatalf("migrated score = %d", best)
 	}
 	if keys, _ := s.Keys(ctx, p.ID); len(keys) != 1 || keys[0].AddedAt.Unix() != 100 {

@@ -1,4 +1,4 @@
-package pacman
+package muncher
 
 import "time"
 
@@ -27,19 +27,19 @@ type ghost struct {
 
 func newGhosts() []*ghost {
 	return []*ghost{
-		{name: "Blinky", color: "#FF4F5E", mover: mover{pos: ghostExit, dir: dirLeft}, mode: ghostActive,
+		{name: "Chaser", color: "#FF4F5E", mover: mover{pos: ghostExit, dir: dirLeft}, mode: ghostActive,
 			corner: point{MazeW - 3, -3}},
-		{name: "Pinky", color: "#FF8BD8", mover: mover{pos: point{13, 10}, dir: dirUp}, mode: ghostWaiting,
+		{name: "Ambusher", color: "#FF8BD8", mover: mover{pos: point{13, 10}, dir: dirUp}, mode: ghostWaiting,
 			corner: point{2, -3}, releaseAfter: time.Second},
-		{name: "Inky", color: "#3DE8FF", mover: mover{pos: point{11, 10}, dir: dirUp}, mode: ghostWaiting,
+		{name: "Flanker", color: "#3DE8FF", mover: mover{pos: point{11, 10}, dir: dirUp}, mode: ghostWaiting,
 			corner: point{MazeW - 1, MazeH + 1}, releaseDots: 30, releaseAfter: 6 * time.Second},
-		{name: "Clyde", color: "#FFB347", mover: mover{pos: point{16, 10}, dir: dirUp}, mode: ghostWaiting,
+		{name: "Drifter", color: "#FFB347", mover: mover{pos: point{16, 10}, dir: dirUp}, mode: ghostWaiting,
 			corner: point{0, MazeH + 1}, releaseDots: 60, releaseAfter: 11 * time.Second},
 	}
 }
 
 // releaseGhosts lets waiting ghosts out based on dots eaten and time, and
-// always lets one out if Pac-Man stops eating for a while.
+// always lets one out if the muncher stops eating for a while.
 func (e *Engine) releaseGhosts() {
 	for _, g := range e.ghosts {
 		if g.mode != ghostWaiting {
@@ -79,13 +79,13 @@ func (e *Engine) target(g *ghost) point {
 	}
 	pac, facing := e.pac.pos, e.pac.dir.vec()
 	switch g.name {
-	case "Pinky": // aims four cells ahead of Pac-Man
+	case "Ambusher": // aims four cells ahead of the muncher
 		return point{pac.x + 4*facing.x, pac.y + 4*facing.y}
-	case "Inky": // uses Blinky to pincer Pac-Man
+	case "Flanker": // uses Chaser to pincer the muncher
 		pivot := point{pac.x + 2*facing.x, pac.y + 2*facing.y}
 		b := e.ghosts[0].pos
 		return point{2*pivot.x - b.x, 2*pivot.y - b.y}
-	case "Clyde": // chases, but loses his nerve up close
+	case "Drifter": // chases, but loses his nerve up close
 		if dist2(g.pos, pac) < 64 {
 			return g.corner
 		}

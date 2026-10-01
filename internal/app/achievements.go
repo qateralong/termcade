@@ -70,8 +70,8 @@ var achievements = []achievement{
 	{"Completionist", "play every game", func(s summary) bool { return s.available > 0 && s.distinct >= s.available }},
 	{"First Victory", "win a multiplayer match", func(s summary) bool { return s.wins >= 1 }},
 	{"Champion", "win 10 multiplayer matches", func(s summary) bool { return s.wins >= 10 }},
-	{"Block Master", "10,000 points in Tetris", func(s summary) bool { return s.best("tetris") >= 10000 }},
-	{"Ghost Hunter", "5,000 points in Pac-Man", func(s summary) bool { return s.best("pacman") >= 5000 }},
+	{"Block Master", "10,000 points in Blockfall", func(s summary) bool { return s.best("blockfall") >= 10000 }},
+	{"Ghost Hunter", "5,000 points in Maze Muncher", func(s summary) bool { return s.best("muncher") >= 5000 }},
 	{"Snake Charmer", "500 points in Snake", func(s summary) bool { return s.best("snake-classic") >= 500 }},
 	{"Bomb Squad", "clear Minesweeper on Hard", func(s summary) bool {
 		_, ok := s.bests["minesweeper:hard"]

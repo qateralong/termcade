@@ -5,6 +5,7 @@ import (
 	"termcade/internal/games"
 	"termcade/internal/games/alien"
 	"termcade/internal/games/battleship"
+	"termcade/internal/games/blockfall"
 	"termcade/internal/games/bomber"
 	"termcade/internal/games/bossrush"
 	"termcade/internal/games/breakout"
@@ -13,22 +14,21 @@ import (
 	"termcade/internal/games/g2048"
 	"termcade/internal/games/invaders"
 	"termcade/internal/games/minesweeper"
-	"termcade/internal/games/pacman"
+	"termcade/internal/games/muncher"
 	"termcade/internal/games/poker"
 	"termcade/internal/games/racing"
 	"termcade/internal/games/snake"
 	"termcade/internal/games/snakearena"
 	"termcade/internal/games/sokoban"
 	"termcade/internal/games/tanks"
-	"termcade/internal/games/tetris"
 	"termcade/internal/games/tron"
 )
 
 // All returns every game: solo games first, then multiplayer.
 func All() []games.Game {
 	solo := []games.Game{
-		pacman.Game(),
-		tetris.Game(),
+		muncher.Game(),
+		blockfall.Game(),
 		snake.Game(),
 		minesweeper.Game(),
 		g2048.Game(),
