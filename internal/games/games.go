@@ -10,6 +10,8 @@
 package games
 
 import (
+	"time"
+
 	tea "github.com/charmbracelet/bubbletea"
 
 	"termcade/internal/ui/theme"
@@ -77,6 +79,23 @@ type ScoreBook interface {
 	Top(board string, lowerIsBetter bool, n int) []ScoreEntry
 }
 
+// Result is the outcome of one finished game for one player.
+type Result struct {
+	Game        string
+	Multiplayer bool
+	Place       int // 1-based finishing place in multiplayer, 0 in solo games
+	Seats       int
+	Score       int
+	Won         bool
+	Duration    time.Duration
+}
+
+// ResultBook records finished games for the player's profile statistics.
+// Guests' results are not kept.
+type ResultBook interface {
+	Record(Result)
+}
+
 // Session is everything a game needs to build a player's model.
 type Session struct {
 	Player Player
@@ -91,6 +110,8 @@ type Session struct {
 	Send func(tea.Msg)
 	// Scores is the player's view of the leaderboards.
 	Scores ScoreBook
+	// Results records finished games; may be nil.
+	Results ResultBook
 }
 
 // Leaver is implemented by game models that need to clean up when the player

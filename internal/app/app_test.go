@@ -72,43 +72,6 @@ func TestLobbyLayoutFitsEverySize(t *testing.T) {
 	}
 }
 
-func TestSetupFlowCreatesPlayer(t *testing.T) {
-	m := newTestApp(t, Identity{SessionID: "s1", User: "neo", Fingerprint: "SHA256:abc"})
-	m.Update(tea.WindowSizeMsg{Width: 100, Height: 30})
-
-	// Any key skips the intro; a new player lands on the setup form with
-	// their SSH username suggested as the nickname.
-	m.Update(tea.KeyMsg{Type: tea.KeyEnter})
-	if m.screen != screenSetup {
-		t.Fatalf("screen = %v, want setup", m.screen)
-	}
-	if got := m.setup.name.Value(); got != "neo" {
-		t.Fatalf("suggested name = %q", got)
-	}
-
-	// Pick the next color and submit.
-	m.Update(tea.KeyMsg{Type: tea.KeyTab})
-	m.Update(tea.KeyMsg{Type: tea.KeyRight})
-	m.Update(tea.KeyMsg{Type: tea.KeyEnter})
-	if m.screen != screenLobby {
-		t.Fatalf("screen = %v, want lobby (err %q)", m.screen, m.setup.err)
-	}
-	if m.player == nil || m.player.Name != "neo" || m.player.Color != theme.PlayerColors[1].Key {
-		t.Fatalf("player not saved: %+v", m.player)
-	}
-	if members := m.deps.Hub.Members(); len(members) != 1 || members[0].Name != "neo" {
-		t.Fatalf("hub members = %+v", members)
-	}
-
-	// A second session with the same key is recognized and skips setup.
-	again := New(m.deps, m.th, Identity{SessionID: "s2", Fingerprint: "SHA256:abc"}, func(tea.Msg) {})
-	defer again.Close()
-	again.Update(tea.KeyMsg{Type: tea.KeyEnter})
-	if again.screen != screenLobby || again.name != "neo" || again.player.Logins != 2 {
-		t.Fatalf("returning player: screen=%v name=%q player=%+v", again.screen, again.name, again.player)
-	}
-}
-
 func TestComingSoonGameDoesNotLaunch(t *testing.T) {
 	m := newTestApp(t, Identity{SessionID: "s1"})
 	m.deps.Games = games.NewRegistry(games.ComingSoon(games.Info{ID: "soon", Name: "Soon", Icon: "*"}))

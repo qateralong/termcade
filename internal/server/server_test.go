@@ -104,8 +104,11 @@ func TestEndToEnd(t *testing.T) {
 	}
 
 	stdin.Write([]byte("\r")) // skip the intro
-	out.waitFor(t, "CREATE YOUR PLAYER")
-	stdin.Write([]byte("\r")) // accept the suggested name "trinity"
+	out.waitFor(t, "WELCOME, PLAYER")
+	stdin.Write([]byte("1")) // create an account
+	out.waitFor(t, "CREATE AN ACCOUNT")
+	// The name "trinity" is suggested; add a password and confirm it.
+	stdin.Write([]byte("\tmatrix99\tmatrix99\r"))
 	out.waitFor(t, "LOBBY CHAT")
 	out.waitFor(t, "trinity joined the arcade")
 

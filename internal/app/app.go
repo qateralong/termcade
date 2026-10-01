@@ -12,6 +12,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 
+	"termcade/internal/auth"
 	"termcade/internal/games"
 	"termcade/internal/hub"
 	"termcade/internal/store"
@@ -30,6 +31,8 @@ type Deps struct {
 	Hub   *hub.Hub
 	Games *games.Registry
 	Log   *log.Logger
+	// Logins slows down password guessing across all sessions.
+	Logins *auth.Limiter
 }
 
 // Identity describes the SSH connection behind a session.
@@ -46,8 +49,11 @@ type screen int
 
 const (
 	screenIntro screen = iota
-	screenSetup
+	screenWelcome
+	screenForm
+	screenConfirm
 	screenLobby
+	screenProfile
 	screenGame
 )
 
@@ -69,9 +75,15 @@ type App struct {
 	frame         int // animation frame counter
 	returning     bool
 
-	intro intro
-	setup setupForm
-	lobby lobby
+	intro      intro
+	welcomeSel int
+	form       form
+	formKind   formKind
+	confirm    confirmState
+	profile    profileState
+	lobby      lobby
+
+	onlineSince time.Time // when the player signed in, for time played
 
 	game   tea.Model
 	gameID string
@@ -116,6 +128,7 @@ func New(deps Deps, th *theme.Theme, id Identity, send func(tea.Msg)) *App {
 				m.color = theme.DefaultPlayerColor
 			}
 			m.returning = true
+			m.onlineSince = time.Now()
 		case !errors.Is(err, store.ErrNotFound):
 			deps.Log.Error("load player", "err", err)
 		}
@@ -128,8 +141,11 @@ func New(deps Deps, th *theme.Theme, id Identity, send func(tea.Msg)) *App {
 // Close releases everything the session holds. Safe to call more than once.
 func (m *App) Close() {
 	m.leaveGame()
+	m.saveOnlineTime()
+	m.onlineSince = time.Time{}
 	if m.leave != nil {
 		m.leave()
+		m.leave = nil
 	}
 }
 
@@ -209,8 +225,14 @@ func (m *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch m.screen {
 	case screenIntro:
 		return m, m.updateIntro(msg)
-	case screenSetup:
-		return m, m.updateSetup(msg)
+	case screenWelcome:
+		return m, m.updateWelcome(msg)
+	case screenForm:
+		return m, m.updateForm(msg)
+	case screenConfirm:
+		return m, m.updateConfirm(msg)
+	case screenProfile:
+		return m, m.updateProfile(msg)
 	case screenLobby:
 		return m, m.updateLobby(msg)
 	case screenGame:
@@ -233,8 +255,14 @@ func (m *App) View() string {
 	switch m.screen {
 	case screenIntro:
 		return m.viewIntro()
-	case screenSetup:
-		return m.viewSetup()
+	case screenWelcome:
+		return m.viewWelcome()
+	case screenForm:
+		return m.viewFormScreen()
+	case screenConfirm:
+		return m.viewConfirm()
+	case screenProfile:
+		return m.viewProfile()
 	default:
 		return m.viewLobby()
 	}
@@ -244,9 +272,13 @@ func (m *App) View() string {
 func (m *App) finishIntro() tea.Cmd {
 	if m.player != nil {
 		cmd := m.enterLobby()
-		return tea.Batch(cmd, m.notify("Welcome back, "+m.name+"!", false))
+		greeting := "Welcome back, " + m.name + "!"
+		if !m.player.HasPassword {
+			greeting += " Set a password in your profile (p) to log in from other computers."
+		}
+		return tea.Batch(cmd, m.notify(greeting, false))
 	}
-	return m.openSetup(false)
+	return m.openWelcome()
 }
 
 // enterLobby joins the hub (first time only) and shows the lobby.
@@ -283,11 +315,12 @@ func (m *App) launch(g games.Game) tea.Cmd {
 			Color:     m.color,
 			Guest:     m.player == nil,
 		},
-		Theme:  m.th,
-		Width:  m.width,
-		Height: m.height,
-		Send:   m.send,
-		Scores: m.scores,
+		Theme:   m.th,
+		Width:   m.width,
+		Height:  m.height,
+		Send:    m.send,
+		Scores:  m.scores,
+		Results: m.scores,
 	})
 	if model == nil {
 		return m.notify("Couldn't start "+info.Name+", sorry.", true)

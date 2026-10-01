@@ -13,6 +13,7 @@ import (
 	"github.com/charmbracelet/ssh"
 
 	"termcade/internal/app"
+	"termcade/internal/auth"
 	"termcade/internal/games"
 	"termcade/internal/games/lineup"
 	"termcade/internal/hub"
@@ -50,10 +51,11 @@ func serve(logger *log.Logger, addr, hostKey, dbPath string) error {
 	defer st.Close()
 
 	deps := app.Deps{
-		Store: st,
-		Hub:   hub.New(),
-		Games: games.NewRegistry(lineup.All()...),
-		Log:   logger,
+		Store:  st,
+		Hub:    hub.New(),
+		Games:  games.NewRegistry(lineup.All()...),
+		Log:    logger,
+		Logins: auth.NewLimiter(5, time.Minute),
 	}
 
 	srv, err := server.New(server.Config{

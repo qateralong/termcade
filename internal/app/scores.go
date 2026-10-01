@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"termcade/internal/games"
+	"termcade/internal/store"
 )
 
 // scoreBook implements games.ScoreBook for one session. Registered players'
@@ -59,6 +60,23 @@ func (b *scoreBook) Submit(board string, lowerIsBetter bool, score int) (int, bo
 		return score, true
 	}
 	return prev, false
+}
+
+// Record implements games.ResultBook.
+func (b *scoreBook) Record(r games.Result) {
+	p := b.m.player
+	if p == nil {
+		return
+	}
+	ctx, cancel := b.ctx()
+	defer cancel()
+	err := b.m.deps.Store.AddResult(ctx, store.Result{
+		PlayerID: p.ID, Game: r.Game, Multiplayer: r.Multiplayer, Place: r.Place,
+		Seats: r.Seats, Score: r.Score, Won: r.Won, Duration: r.Duration,
+	})
+	if err != nil {
+		b.m.deps.Log.Error("save result", "err", err)
+	}
 }
 
 func (b *scoreBook) Top(board string, lowerIsBetter bool, n int) []games.ScoreEntry {

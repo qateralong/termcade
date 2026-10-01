@@ -35,9 +35,10 @@ type model struct {
 	phase   phase
 	variant int
 
-	eng  Engine
-	gen  int // identifies the current tick chain
-	last time.Time
+	eng     Engine
+	gen     int // identifies the current tick chain
+	last    time.Time
+	started time.Time
 
 	best    int
 	hasBest bool
@@ -88,6 +89,7 @@ func (m *model) tick() tea.Cmd {
 
 func (m *model) start() tea.Cmd {
 	m.eng = m.cfg.New(m.s, m.variantKey(), m.rng)
+	m.started = time.Now()
 	m.phase = phasePlaying
 	m.record = false
 	return m.resume()
@@ -105,6 +107,12 @@ func (m *model) finish() {
 	m.gen++ // stop ticking
 	score := m.eng.Score()
 	won := m.eng.State() == Won
+	if m.s.Results != nil {
+		m.s.Results.Record(games.Result{
+			Game: m.cfg.Info.ID, Seats: 1, Score: score, Won: won,
+			Duration: time.Since(m.started),
+		})
+	}
 	if m.s.Scores != nil && (won || (!m.cfg.OnlyWins && score > 0)) {
 		m.best, m.record = m.s.Scores.Submit(m.board(), m.cfg.LowerIsBetter, score)
 		m.hasBest = true

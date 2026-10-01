@@ -162,6 +162,16 @@ func (h *Hub) Rename(sessionID, name, color string) {
 	h.broadcastPresenceLocked()
 }
 
+// SetGuest marks a session as a guest or a registered player.
+func (h *Hub) SetGuest(sessionID string, guest bool) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	if c, ok := h.clients[sessionID]; ok && c.member.Guest != guest {
+		c.member.Guest = guest
+		h.broadcastPresenceLocked()
+	}
+}
+
 // Say posts a chat message from the given session.
 func (h *Hub) Say(sessionID, text string) error {
 	text = textutil.SanitizeLine(text, MaxMessageLen)

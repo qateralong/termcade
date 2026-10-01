@@ -148,7 +148,7 @@ func (m *App) updateGamesKeys(msg tea.KeyMsg) tea.Cmd {
 		l.input.Placeholder = "say something nice"
 		return l.input.Focus()
 	case "p":
-		return m.openSetup(true)
+		return m.openProfile()
 	case "?":
 		l.help = true
 	case "q":
@@ -556,7 +556,7 @@ func (m *App) viewHelp() string {
 		row("↑ ↓  j k", "choose a game"),
 		row("enter", "play the selected game"),
 		row("tab", "switch between games and chat"),
-		row("p", "edit your name and color"),
+		row("p", "your profile, stats and account"),
 		row("?", "show or hide this help"),
 		row("q", "leave the arcade"),
 		"",

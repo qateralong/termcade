@@ -30,9 +30,11 @@ already have.
 
 - **Zero friction.** `ssh` ships with Windows, macOS and Linux. That's the
   whole client.
-- **Your SSH key is your account.** Players are recognized by their public key
-  fingerprint, so there are no passwords to remember or leak. Connecting
-  without a key works too; you just play as a guest.
+- **Accounts that follow you.** Register with a name and password, and log in
+  from any computer. Computers you trust remember you by their SSH key, so
+  you only type the password once per machine. Or just play as a guest.
+- **Profiles and stats.** Games played, multiplayer wins, personal bests, time
+  in the arcade, and achievements to unlock.
 - **Live lobby.** See who's online and which game they're in, and chat while
   you wait.
 - **Built for more games.** Each game plugs in through a small interface; the
@@ -197,6 +199,9 @@ docker run -d --name termcade --restart unless-stopped \
 - Everything user-provided (names, chat) is sanitized before it's shown in
   anyone else's terminal: escape sequences, control characters and bidi
   overrides are stripped.
+- Passwords are stored as bcrypt hashes. Wrong guesses lock an account for a
+  minute after five tries, and a failed login takes the same time whether or
+  not the name exists.
 
 ```
 cmd/termcade        entry point: serve, update, install, version
@@ -212,6 +217,7 @@ internal/games/multi rooms, matchmaking and bots for multiplayer games
 internal/games/cards playing cards and their rendering
 internal/games/*    one package per game; lineup/ sets the lobby order
 internal/store      SQLite persistence
+internal/auth       password hashing and login rate limiting
 internal/textutil   name validation and text sanitizing
 internal/ui/theme   palette, gradients, logo
 internal/ui/canvas  half-block pixel graphics for the arcade games

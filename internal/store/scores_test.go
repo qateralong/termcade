@@ -12,9 +12,9 @@ func TestScores(t *testing.T) {
 	clock := time.Unix(1_000_000, 0)
 	s.now = func() time.Time { clock = clock.Add(time.Second); return clock }
 
-	alice, _ := s.CreatePlayer(ctx, "fa", "alice", "pink")
-	bob, _ := s.CreatePlayer(ctx, "fb", "bob", "cyan")
-	carol, _ := s.CreatePlayer(ctx, "fc", "carol", "lime")
+	alice, _ := s.CreatePlayer(ctx, "alice", "pink", "", "fa")
+	bob, _ := s.CreatePlayer(ctx, "bob", "cyan", "", "fb")
+	carol, _ := s.CreatePlayer(ctx, "carol", "lime", "", "fc")
 
 	if _, ok, err := s.BestScore(ctx, alice.ID, "tetris", false); ok || err != nil {
 		t.Fatalf("empty best: ok=%v err=%v", ok, err)

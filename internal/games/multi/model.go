@@ -28,6 +28,8 @@ type model struct {
 
 	wake chan struct{}
 	stop chan struct{}
+
+	recorded bool // this room's result has been saved
 }
 
 func newModel(g *Game, s games.Session) *model {
@@ -48,6 +50,7 @@ func (m *model) join() {
 		}
 	}
 	m.room, m.seat = m.g.seatFor(m.s.Player, notify)
+	m.recorded = false
 	if send == nil {
 		return
 	}
@@ -81,8 +84,34 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.w, m.h = msg.Width, msg.Height
 	case tea.KeyMsg:
 		return m, m.key(msg.String())
+	case frameMsg:
+		m.recordResult()
 	}
 	return m, nil
+}
+
+// recordResult saves this player's finishing place once the match is over.
+func (m *model) recordResult() {
+	if m.recorded || m.room == nil || m.s.Results == nil {
+		return
+	}
+	r := m.room
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	if r.phase != Finished {
+		return
+	}
+	m.recorded = true
+	for i, st := range r.results {
+		if st.Seat == m.seat {
+			m.s.Results.Record(games.Result{
+				Game: r.g.cfg.Info.ID, Multiplayer: true,
+				Place: i + 1, Seats: len(r.seats), Won: i == 0,
+				Duration: time.Since(r.startedAt),
+			})
+			return
+		}
+	}
 }
 
 func (m *model) phase() Phase {
