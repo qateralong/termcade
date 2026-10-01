@@ -57,7 +57,8 @@ already have.
 | Boss Rush | Five bosses back to back: dodge bone walls, fire, lasers and rings with your heart, jump in gravity mode, and strike with a timing bar |
 
 **Multiplayer**, with bots in any empty seats. A room starts as soon as it's
-full, or after 20 seconds with bots filling the gaps. A game in progress never
+full, as soon as everyone in it presses space to say they're ready, or after
+30 seconds, with bots filling the gaps. A game in progress never
 takes new players: they get a fresh room. If someone leaves mid-match, a bot
 takes over their seat. In turn-based games every move has a timer, and a bot
 moves for you if it runs out.

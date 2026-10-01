@@ -23,6 +23,7 @@ type seat struct {
 	player games.Player
 	human  bool
 	left   bool   // the human left; a bot plays on
+	ready  bool   // the human is ready to start before the countdown ends
 	notify func() // wakes the player's session; nil for bots
 	name   string
 	color  string
@@ -124,6 +125,31 @@ func (r *Room) assignColors() {
 	}
 }
 
+// toggleReady flips a waiting player's ready mark.
+func (r *Room) toggleReady(i int) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	s := r.seats[i]
+	if r.phase != Waiting || s == nil || !s.human {
+		return
+	}
+	s.ready = !s.ready
+	r.wakeLocked()
+}
+
+// readyLocked counts the ready players and the players in the room.
+func (r *Room) readyLocked() (ready, humans int) {
+	for _, s := range r.seats {
+		if s != nil && s.human && !s.left {
+			humans++
+			if s.ready {
+				ready++
+			}
+		}
+	}
+	return ready, humans
+}
+
 func (r *Room) humansLocked() int {
 	n := 0
 	for _, s := range r.seats {
@@ -175,7 +201,8 @@ func (r *Room) tick(now time.Time, dt time.Duration) bool {
 				full = false
 			}
 		}
-		if full || !now.Before(r.deadline) {
+		ready, humans := r.readyLocked()
+		if full || ready == humans || !now.Before(r.deadline) {
 			r.start(now)
 		}
 	case Countdown:

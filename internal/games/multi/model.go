@@ -142,6 +142,13 @@ func (m *model) key(k string) tea.Cmd {
 			m.room.world.Input(m.seat, k)
 		}
 		m.room.mu.Unlock()
+	case Waiting:
+		switch k {
+		case "enter", " ", "r":
+			m.room.toggleReady(m.seat)
+		case "q", "esc":
+			return games.Exit
+		}
 	default:
 		if k == "q" || k == "esc" {
 			return games.Exit
@@ -216,7 +223,11 @@ func (m *model) viewFooter() string {
 	case Finished:
 		line = layout.KeyLine(t, "enter", "play again", "q", "back to lobby")
 	default:
-		line = layout.KeyLine(t, "q", "back to lobby")
+		ready := "ready"
+		if s := m.room.seats[m.seat]; s != nil && s.ready {
+			ready = "not ready"
+		}
+		line = layout.KeyLine(t, "space", ready, "q", "back to lobby")
 	}
 	return " " + ansi.Truncate(line, m.w-1, "…")
 }
@@ -237,7 +248,11 @@ func (m *model) viewWaiting() string {
 		case s == nil:
 			seats = append(seats, num+t.Faded.Render("waiting…"))
 		default:
-			line := num + t.Fg(s.color).Bold(true).Render("● "+s.name)
+			mark := t.Faded.Render("○ ")
+			if s.ready {
+				mark = t.Fg(theme.Lime).Bold(true).Render("✓ ")
+			}
+			line := num + mark + t.Fg(s.color).Bold(true).Render(s.name)
 			if i == m.seat {
 				line += t.Faded.Render(" you")
 			}
@@ -255,8 +270,14 @@ func (m *model) viewWaiting() string {
 	if left < 0 {
 		left = 0
 	}
+	ready, humans := r.readyLocked()
 	status := t.Fg(theme.Amber).Bold(true).Render("starting in "+strconv.Itoa(int(left.Seconds()))+"s") +
+		t.Faded.Render("  ·  ") + t.Fg(theme.Lime).Render(strconv.Itoa(ready)+"/"+strconv.Itoa(humans)+" ready") +
 		t.Faded.Render("  ·  bots take the empty seats")
+	hint := t.Faded.Render("press ") + t.Key.Render("space") + t.Faded.Render(" when you're ready · everyone ready = start now")
+	if s := r.seats[m.seat]; s != nil && s.ready {
+		hint = t.Fg(theme.Lime).Render("you're ready") + t.Faded.Render(" · waiting for the others (") + t.Key.Render("space") + t.Faded.Render(" to undo)")
+	}
 
 	cols := lipgloss.JoinHorizontal(lipgloss.Top,
 		lipgloss.JoinVertical(lipgloss.Left, seats...),
@@ -270,6 +291,7 @@ func (m *model) viewWaiting() string {
 		cols,
 		"",
 		status,
+		hint,
 	))
 }
 

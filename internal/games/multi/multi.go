@@ -1,8 +1,9 @@
 // Package multi runs multiplayer rooms for realtime games.
 //
 // Matchmaking works the same for every game: the first player to join a room
-// starts a countdown. The room starts as soon as every seat is taken, or
-// when the countdown runs out, in which case bots fill the empty seats. A
+// starts a countdown. The room starts as soon as every seat is taken, when
+// every player in it says they're ready, or when the countdown runs out; bots
+// fill any empty seats. A
 // room that is already playing never takes new players; a new room is made
 // instead. A player who leaves mid-game is replaced by a bot.
 //
@@ -64,7 +65,7 @@ type World interface {
 type Config struct {
 	Info  games.Info
 	Seats int
-	// Wait is how long a room waits for players; defaults to 20s.
+	// Wait is how long a room waits for players; defaults to 30s.
 	Wait time.Duration
 	// Countdown is the 3-2-1 before play; defaults to 3s.
 	Countdown time.Duration
@@ -88,9 +89,9 @@ type Game struct {
 // New returns a multiplayer game.
 func New(cfg Config) *Game {
 	cfg.Info.Mode = games.Multiplayer
-	cfg.Info.Description += " Rooms start when full, or after 20 seconds with bots in the empty seats."
+	cfg.Info.Description += " Rooms start when full, when everyone is ready, or after 30 seconds, with bots in the empty seats."
 	if cfg.Wait == 0 {
-		cfg.Wait = 20 * time.Second
+		cfg.Wait = 30 * time.Second
 	}
 	if cfg.Countdown == 0 {
 		cfg.Countdown = 3 * time.Second

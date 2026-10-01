@@ -137,3 +137,68 @@ func TestLeavingWhileWaitingFreesTheSeat(t *testing.T) {
 		t.Fatal("freed seat not reused")
 	}
 }
+
+func TestEveryoneReadyStartsEarly(t *testing.T) {
+	g, worlds := newTestGame(4)
+	r, a := g.seatFor(player("a"), func() {})
+	_, b := g.seatFor(player("b"), func() {})
+
+	r.toggleReady(a)
+	r.tick(time.Now(), time.Millisecond)
+	if r.phase != Waiting {
+		t.Fatal("room started with only one of two players ready")
+	}
+	// Changing your mind counts.
+	r.toggleReady(a)
+	r.toggleReady(b)
+	r.tick(time.Now(), time.Millisecond)
+	if r.phase != Waiting {
+		t.Fatal("room started after a player took back their ready")
+	}
+
+	r.toggleReady(a)
+	r.tick(time.Now(), time.Millisecond)
+	if r.phase != Countdown {
+		t.Fatalf("room is %v with everyone ready", r.phase)
+	}
+	bots := 0
+	for _, s := range (*worlds)[0].seats {
+		if s.Bot {
+			bots++
+		}
+	}
+	if bots != 2 {
+		t.Fatalf("%d bots, want 2 in the empty seats", bots)
+	}
+	// Ready can't be toggled once the room has started.
+	r.toggleReady(a)
+	if !r.seats[a].ready {
+		t.Fatal("ready changed after the start")
+	}
+}
+
+func TestNewcomerMustAlsoBeReady(t *testing.T) {
+	g, _ := newTestGame(4)
+	r, a := g.seatFor(player("a"), func() {})
+	g.seatFor(player("b"), func() {})
+	r.toggleReady(a)
+	_, c := g.seatFor(player("c"), func() {})
+	r.tick(time.Now(), time.Millisecond)
+	if r.phase != Waiting {
+		t.Fatal("room started without the newcomers being ready")
+	}
+	// If the only player who isn't ready leaves, everyone left is ready.
+	r.leave(c)
+	r.leave(1)
+	r.tick(time.Now(), time.Millisecond)
+	if r.phase != Countdown {
+		t.Fatalf("room is %v after the unready players left", r.phase)
+	}
+}
+
+func TestDefaultWaitIs30s(t *testing.T) {
+	g, _ := newTestGame(2)
+	if g.cfg.Wait != 30*time.Second {
+		t.Fatalf("wait %v", g.cfg.Wait)
+	}
+}
